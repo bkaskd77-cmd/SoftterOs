@@ -1,0 +1,15 @@
+# Project-local toolchains and build caches; never commit machine binaries.
+/.tools/
+/.cache/
+
+# Credentials and local configuration.
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+
+# Local Go test artifacts.
+*.test
+*.test.exe
+coverage.out
