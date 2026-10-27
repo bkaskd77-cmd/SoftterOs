@@ -1,4 +1,4 @@
-// Package enquiries contains the immutable manual-enquiry creation domain.
+// Package enquiries contains immutable manual enquiries and their bounded workflow.
 package enquiries
 
 import (
@@ -11,7 +11,7 @@ import (
 // State identifies the enquiry's business state.
 type State string
 
-// StateNew is the only state accepted at creation. Later transitions are deferred.
+// StateNew is the only state accepted at creation.
 const StateNew State = "New"
 
 // ErrInvalidID is returned without echoing a caller-supplied identifier.
@@ -20,13 +20,16 @@ var ErrInvalidID = errors.New("invalid enquiry identifier")
 // Enquiry is an immutable value. Its zero value is not a created enquiry.
 // Ownership and attribution can only enter through an authorization grant.
 type Enquiry struct {
-	id             string
-	organizationID string
-	state          State
-	createdBy      string
-	membershipID   string
-	createdAt      time.Time
-	input          Input
+	id                   string
+	organizationID       string
+	state                State
+	createdBy            string
+	membershipID         string
+	createdAt            time.Time
+	input                Input
+	assigneeMembershipID string
+	version              uint64
+	lastChangedAt        time.Time
 }
 
 // New creates an enquiry in memory from a grant issued for this operation.
@@ -51,6 +54,8 @@ func New(id string, input Input, authorization authz.CreationAuthorization) (Enq
 		membershipID:   authorization.MembershipID(),
 		createdAt:      createdAt,
 		input:          input,
+		version:        1,
+		lastChangedAt:  createdAt,
 	}, nil
 }
 

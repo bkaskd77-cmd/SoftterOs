@@ -4,7 +4,7 @@
 
 This workflow starts with manual enquiry capture and ends with an internally approved draft itinerary. It excludes quotation, publication, reservations, supplier confirmation, and payment processing. Passport and medical-data collection are outside the workflow.
 
-Only manual enquiry creation is implemented by this foundation. Qualification, drafting, state transitions, assignments, revisions, review, and approval below are requirements for future bounded work. There is no HTTP interface, database, durable audit log, frontend, AI integration, or traveller delivery mechanism.
+Manual enquiry creation and the in-memory `New` → `Under review` → `Qualified` transitions, including review self-assignment, are implemented. Other transitions, drafting, reassignment, revisions and approval below remain specifications for future bounded work. There is no HTTP interface, database, durable audit log, frontend, AI integration, or traveller delivery mechanism.
 
 ## Capture and ownership
 
@@ -36,7 +36,7 @@ Closing outcomes may be archived; `Draft ready` may be archived after its associ
 
 ### Review and qualification authorization
 
-The following rules are approved specifications for the two forward transitions; neither transition nor its assignment behavior is implemented yet.
+The following approved rules are implemented as immutable in-memory results. State, assignment and audit facts are returned together; future persistence must atomically check stored versions and commit that outcome with fresh authorization. There is no shared authoritative store or durable audit sink yet.
 
 | Operation | Required canonical capability | Transition | Assignment rule |
 | --- | --- | --- | --- |
@@ -60,7 +60,7 @@ Deny the operation when any required condition fails, including:
 
 Validate authorization, current state, assignment, and expected version before mutation. Starting review must commit the assignment and state change together; qualification must preserve the assignee. Each successful operation requires attributable audit information recording the authoritative organization and active organization, enquiry identifier, previous and new states, actor, acting membership, authorization grant basis, exact capability, previous and resulting assignee, and authoritative timestamp. State, assignment, and success audit evidence form one atomic outcome. A denied or failed operation leaves the enquiry, assignment, and existing audit facts unchanged and produces no success event. Safe denial audit records are distinct from success events and must not expose sensitive values.
 
-These requirements do not introduce persistence or a versioning mechanism in this design task. The existing expected-version and atomicity requirements remain in force; their technical representation and durable audit implementation remain deferred. Returning in-memory audit facts alone is not a durable audit record.
+The implementation uses a minimal in-memory expected-version counter for these two transitions. Persistent version comparison, transaction representation and durable audit implementation remain deferred; future persistence must check the stored version and current authority atomically with state and audit writes. Returning in-memory audit facts alone is not a durable audit record.
 
 ## Itinerary lifecycle and versions
 

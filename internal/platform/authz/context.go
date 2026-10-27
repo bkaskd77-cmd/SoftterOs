@@ -23,6 +23,9 @@ var ErrUnauthorized = errors.New("not authorized to create enquiry")
 type Actor struct {
 	ID            string
 	Authenticated bool
+	// Human is attested only by the trusted adapter; workflow transitions deny
+	// system/AI actors and an omitted human attestation.
+	Human bool
 }
 
 // Membership contains authoritative facts for one actor in one organization.
@@ -33,6 +36,7 @@ type Membership struct {
 	ActorID        string
 	OrganizationID string
 	Active         bool
+	Revoked        bool
 	ValidFrom      time.Time
 	ValidUntil     time.Time
 	Capabilities   []Capability
@@ -43,6 +47,7 @@ type ContextInput struct {
 	Actor                Actor
 	ActiveOrganizationID string
 	Membership           Membership
+	TransitionGrant      EnquiryTransitionGrant
 }
 
 // Context is an immutable snapshot of authorization facts. Its zero value denies
@@ -51,10 +56,11 @@ type Context struct {
 	actor                Actor
 	activeOrganizationID string
 	membership           Membership
+	transitionGrant      EnquiryTransitionGrant
 }
 
 // NewContext copies the input, including its mutable capability slice. Every
-// action must still call AuthorizeEnquiryCreation with a trusted current time.
+// action must call its corresponding authorization method with trusted current time.
 func NewContext(input ContextInput) Context {
 	membership := input.Membership
 	membership.Capabilities = append([]Capability(nil), membership.Capabilities...)
@@ -62,6 +68,7 @@ func NewContext(input ContextInput) Context {
 		actor:                input.Actor,
 		activeOrganizationID: input.ActiveOrganizationID,
 		membership:           membership,
+		transitionGrant:      input.TransitionGrant,
 	}
 }
 
@@ -82,25 +89,10 @@ type CreationAuthorization struct {
 // mismatched fact. The caller supplies a trusted current time for deterministic
 // checking; client-provided times must not be used.
 func (c Context) AuthorizeEnquiryCreation(at time.Time) (CreationAuthorization, error) {
+	if !c.validMembership(at) || !c.hasCapability(CapabilityCreateEnquiry) {
+		return CreationAuthorization{}, ErrUnauthorized
+	}
 	membership := c.membership
-	if !c.actor.Authenticated || !validID(c.actor.ID) || !validID(c.activeOrganizationID) ||
-		!validID(membership.ID) || !validID(membership.ActorID) || !validID(membership.OrganizationID) ||
-		!membership.Active || membership.ActorID != c.actor.ID ||
-		membership.OrganizationID != c.activeOrganizationID ||
-		!withinValidity(at, membership.ValidFrom, membership.ValidUntil) {
-		return CreationAuthorization{}, ErrUnauthorized
-	}
-
-	allowed := false
-	for _, capability := range membership.Capabilities {
-		if capability == CapabilityCreateEnquiry {
-			allowed = true
-			break
-		}
-	}
-	if !allowed {
-		return CreationAuthorization{}, ErrUnauthorized
-	}
 
 	return CreationAuthorization{
 		actorID:        c.actor.ID,
@@ -124,6 +116,23 @@ func (a CreationAuthorization) ActorID() string         { return a.actorID }
 func (a CreationAuthorization) OrganizationID() string  { return a.organizationID }
 func (a CreationAuthorization) MembershipID() string    { return a.membershipID }
 func (a CreationAuthorization) AuthorizedAt() time.Time { return a.authorizedAt }
+
+func (c Context) validMembership(at time.Time) bool {
+	m := c.membership
+	return c.actor.Authenticated && validID(c.actor.ID) && validID(c.activeOrganizationID) &&
+		validID(m.ID) && validID(m.ActorID) && validID(m.OrganizationID) &&
+		m.Active && !m.Revoked && m.ActorID == c.actor.ID && m.OrganizationID == c.activeOrganizationID &&
+		withinValidity(at, m.ValidFrom, m.ValidUntil)
+}
+
+func (c Context) hasCapability(required Capability) bool {
+	for _, capability := range c.membership.Capabilities {
+		if capability == required {
+			return true
+		}
+	}
+	return false
+}
 
 func withinValidity(at, from, until time.Time) bool {
 	return validInstant(at) && validInstant(from) && validInstant(until) &&
