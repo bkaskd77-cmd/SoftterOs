@@ -55,3 +55,15 @@ Current security verification covers manual creation's authorization denials, ow
 - AI providers, models, permitted data classes, hosting, evaluation, cost controls, and human-acceptance UI.
 
 Deferral does not relax the security requirements. Each later implementation must resolve the relevant decisions and prove its controls before exposing the functionality.
+
+## Initial foundation verification
+
+Recorded on 2026-10-27 from the completed 2026-10-26 validation run. The application code at preservation commit `3e959da58f23e1235762cc09bb75b1f21ead5d30` passed the following checks, in this order, using the checksum-verified official Go 1.27.3 Linux ARM64 toolchain on Ubuntu 26.04.1 LTS under WSL 2, with GCC 15.2.0 and cgo enabled:
+
+| Command | Result |
+| --- | --- |
+| `go test -race -count=1 ./...` | Passed all three packages; no race reports |
+| `go test -count=1 ./...` | Passed all three packages |
+| `go vet ./...` | Passed |
+
+Module inspection confirmed no third-party Go dependencies. Application code and tests were unchanged for this environment validation. The earlier Windows AMD64-emulation race run failed during ThreadSanitizer initialization with allocation error 87; the successful native Linux ARM64 run resolves that validation blocker without changing application behavior or disabling race detection. These results apply to the manual-creation foundation, not to the deferred functionality described above.
