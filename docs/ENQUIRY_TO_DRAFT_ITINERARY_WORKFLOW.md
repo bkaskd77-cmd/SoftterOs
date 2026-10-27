@@ -34,6 +34,34 @@ Authorized triage or coordination may move an enquiry that has not reached `Draf
 
 Closing outcomes may be archived; `Draft ready` may be archived after its associated itinerary is archived through an authorized action. Archiving records an event and restricts access; it is not deletion and must respect retention controls. Reopening, automatic transitions, and restoration of archived enquiries are deferred and denied until specified. Approval withdrawal moves `Draft ready` back to `Drafting` with a new working revision; it cannot remain ready on the strength of a withdrawn approval.
 
+### Review and qualification authorization
+
+The following rules are approved specifications for the two forward transitions; neither transition nor its assignment behavior is implemented yet.
+
+| Operation | Required canonical capability | Transition | Assignment rule |
+| --- | --- | --- | --- |
+| Start review | `enquiries.review` | `New` → `Under review` | The enquiry must be unassigned. Atomically assign it to the acting membership while changing state. |
+| Qualify | `enquiries.qualify` | `Under review` → `Qualified` | The acting membership must be the enquiry's current assignee. Preserve that assignment. |
+
+These are independent capabilities. Possessing `enquiries.review` does not grant qualification, and possessing `enquiries.qualify` does not grant review. `enquiries.create` grants neither transition. Administrative status, role labels, or assignment alone grant neither capability; there is no implicit administrative bypass.
+
+Both operations require a verified authenticated human actor, an explicit active organization, an active membership bound to that actor and organization, and a current authorization grant bound to that actor and membership and scoped to the enquiry and required action. The actor must act through that membership in the same authoritative organization as the active organization, grant, and enquiry owner. Resolve those facts from trusted authorization sources and the authoritative enquiry, never from caller-controlled enquiry fields or AI output. Memberships in other organizations and collaboration grants cannot bypass this same-organization requirement for these two transitions. Existing purpose, resource, action, and field restrictions continue to apply.
+
+Check membership and grant status and validity at the authoritative action instant. Membership validity retains its inclusive start and exclusive end. Missing, malformed, mismatched, inactive, revoked, not-yet-valid, or expired membership/grant facts deny access. Authorization and audit timestamps come from trusted server time and remain separate from supplied travel dates.
+
+Deny the operation when any required condition fails, including:
+
+- A missing or wrong capability, including possession of only the other transition capability.
+- Direct `New` → `Qualified`, an invalid current state, a skipped transition, or a repeated transition.
+- Starting review on an already assigned enquiry; never overwrite or transfer its assignment.
+- Qualification with no current assignee or by a different membership. Matching the assignee's actor alone is insufficient when the membership differs.
+- Cross-organization actor/membership, active-organization, grant, or enquiry ownership mismatches.
+- Reassignment, supervisor override, delegation, or bulk transitions; all remain deferred and unavailable by default. AI cannot start review, assign an enquiry, qualify it, or approve a transition.
+
+Validate authorization, current state, assignment, and expected version before mutation. Starting review must commit the assignment and state change together; qualification must preserve the assignee. Each successful operation requires attributable audit information recording the authoritative organization and active organization, enquiry identifier, previous and new states, actor, acting membership, authorization grant basis, exact capability, previous and resulting assignee, and authoritative timestamp. State, assignment, and success audit evidence form one atomic outcome. A denied or failed operation leaves the enquiry, assignment, and existing audit facts unchanged and produces no success event. Safe denial audit records are distinct from success events and must not expose sensitive values.
+
+These requirements do not introduce persistence or a versioning mechanism in this design task. The existing expected-version and atomicity requirements remain in force; their technical representation and durable audit implementation remain deferred. Returning in-memory audit facts alone is not a durable audit record.
+
 ## Itinerary lifecycle and versions
 
 | State | Meaning |
@@ -78,4 +106,14 @@ Record authorized and denied sensitive actions with safe reason categories and a
 
 Future workflow tests must exercise every allowed transition and reject unspecified transitions; verify organization capability, assignment, purpose, and field limits; prevent self-approval; reject stale edits and stale approvals; preserve immutable review snapshots; prove withdrawal and supersession behavior; enforce atomic audit/state changes; and verify cross-tenant and concurrent-access failures. AI tests must prove that proposals alone cannot change authoritative state and that acceptance revalidates authority and version.
 
-Deferred decisions include itinerary structure, assignment policies, revision identifiers, snapshot serialization, database transactions and isolation, UI/API contracts, retention durations, and AI provider/proposal storage. Quotation, publication, reservations, supplier confirmation, payment, passport, and medical features require separate authorization and are not next steps implied by this specification.
+Future review and qualification tests must specifically prove:
+
+- Successful `New` → `Under review` claims an unassigned enquiry for the acting membership atomically; successful `Under review` → `Qualified` requires that same current assignee and preserves it.
+- Independent capability enforcement in both directions: review-only authority cannot qualify, qualification-only authority cannot start review, and creation authority or administrative status alone authorizes neither transition.
+- Denial of direct `New` → `Qualified`, invalid states, repeated or skipped transitions, review of an already assigned enquiry, missing assignees, and qualification by a different membership, including another membership of the same actor.
+- Denial of missing, malformed, mismatched, inactive, revoked, premature, or expired memberships/grants; exact membership validity boundaries; wrong enquiry/action grant scope; cross-organization attempts; and violations of applicable purpose or field restrictions.
+- Denial of reassignment, supervisor override, delegation, bulk transitions, and AI-driven transitions. Stale expected versions or concurrent attempts must not overwrite an assignment or produce a partial state/audit outcome.
+- Correct organization, enquiry, actor, membership, grant, capability, prior/new state, assignee, and timestamp attribution using multiple distinct actors and memberships. Assertions must detect hard-coded identities in both business results and audit facts. Denials and failures must preserve state, assignment, and prior audit values and return no success event; returned values must not permit mutation of authoritative facts.
+- Continued acceptance of valid historical travel dates during manual capture, with travel dates never substituted for transition authorization or audit timestamps.
+
+Deferred decisions include itinerary structure, assignment policies beyond the review self-assignment and qualification rules above, revision identifiers, snapshot serialization, database transactions and isolation, UI/API contracts, retention durations, and AI provider/proposal storage. Quotation, publication, reservations, supplier confirmation, payment, passport, and medical features require separate authorization and are not next steps implied by this specification.
