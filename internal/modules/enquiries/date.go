@@ -15,16 +15,11 @@ func parseTravelDate(value string) (time.Time, bool) {
 	return parsed, true
 }
 
-func validTravelDates(startValue, endValue string, at time.Time) bool {
+func validTravelDates(startValue, endValue string) bool {
 	if startValue == "" && endValue == "" {
 		return true
 	}
 	start, startOK := parseTravelDate(startValue)
 	end, endOK := parseTravelDate(endValue)
-	if !startOK || !endOK || end.Before(start) {
-		return false
-	}
-	utc := at.UTC()
-	today := time.Date(utc.Year(), utc.Month(), utc.Day(), 0, 0, 0, 0, time.UTC)
-	return !start.Before(today)
+	return startOK && endOK && !end.Before(start)
 }

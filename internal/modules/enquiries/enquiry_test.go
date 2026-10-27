@@ -27,12 +27,17 @@ func validInput() enquiries.Input {
 
 func authorization(t *testing.T, organizationID string, at time.Time) authz.CreationAuthorization {
 	t.Helper()
+	return authorizationFor(t, "actor-1", "membership-1", organizationID, at)
+}
+
+func authorizationFor(t *testing.T, actorID, membershipID, organizationID string, at time.Time) authz.CreationAuthorization {
+	t.Helper()
 	context := authz.NewContext(authz.ContextInput{
-		Actor:                authz.Actor{ID: "actor-1", Authenticated: true},
+		Actor:                authz.Actor{ID: actorID, Authenticated: true},
 		ActiveOrganizationID: organizationID,
 		Membership: authz.Membership{
-			ID:             "membership-1",
-			ActorID:        "actor-1",
+			ID:             membershipID,
+			ActorID:        actorID,
 			OrganizationID: organizationID,
 			Active:         true,
 			ValidFrom:      at.Add(-time.Hour),
@@ -94,19 +99,28 @@ func TestNewAuthorizedEnquiry(t *testing.T) {
 	}
 }
 
-func TestOwnershipComesOnlyFromAuthorization(t *testing.T) {
+func TestOwnershipAndAttributionComeOnlyFromAuthorization(t *testing.T) {
 	input := validInput()
 	input.ContactName = "organization-caller"
 	input.Destination = "organization-caller"
-	for _, organizationID := range []string{"organization-a", "organization-b"} {
-		t.Run(organizationID, func(t *testing.T) {
-			grant := authorization(t, organizationID, creationTime())
+	for _, identity := range []struct {
+		actorID, membershipID, organizationID string
+	}{
+		{"actor-1", "membership-1", "organization-a"},
+		{"actor-2", "membership-2", "organization-b"},
+	} {
+		t.Run(identity.actorID, func(t *testing.T) {
+			grant := authorizationFor(t, identity.actorID, identity.membershipID, identity.organizationID, creationTime())
 			enquiry, err := enquiries.New("enquiry-1", input, grant)
 			if err != nil {
 				t.Fatalf("create: %v", err)
 			}
-			if enquiry.OrganizationID() != organizationID || enquiry.CreationAudit().OrganizationID != organizationID {
-				t.Fatal("ownership did not come from authorization")
+			if enquiry.OrganizationID() != identity.organizationID || enquiry.CreatedBy() != identity.actorID || enquiry.MembershipID() != identity.membershipID {
+				t.Fatalf("enquiry identities = (%q, %q, %q); want (%q, %q, %q)", enquiry.OrganizationID(), enquiry.CreatedBy(), enquiry.MembershipID(), identity.organizationID, identity.actorID, identity.membershipID)
+			}
+			audit := enquiry.CreationAudit()
+			if audit.OrganizationID != identity.organizationID || audit.ActorID != identity.actorID || audit.MembershipID != identity.membershipID {
+				t.Fatalf("audit identities = (%q, %q, %q); want (%q, %q, %q)", audit.OrganizationID, audit.ActorID, audit.MembershipID, identity.organizationID, identity.actorID, identity.membershipID)
 			}
 		})
 	}
@@ -236,8 +250,11 @@ func TestTravelDates(t *testing.T) {
 		{"missing start", "", "2026-11-06", false},
 		{"missing end", "2026-11-02", "", false},
 		{"reversed range", "2026-11-06", "2026-11-02", false},
-		{"past start", "2026-10-25", "2026-11-02", false},
-		{"past range", "2026-10-23", "2026-10-25", false},
+		{"past start", "2026-10-25", "2026-11-02", true},
+		{"historical range", "2020-02-29", "2020-03-02", true},
+		{"historical same day", "2020-02-29", "2020-02-29", true},
+		{"reversed historical range", "2020-03-02", "2020-02-29", false},
+		{"invalid historical leap day", "2025-02-29", "2025-03-01", false},
 		{"invalid leap day", "2027-02-29", "2027-03-01", false},
 		{"invalid month", "2026-13-01", "2027-01-02", false},
 		{"invalid day", "2026-11-31", "2026-12-02", false},
@@ -274,16 +291,22 @@ func TestTravelDates(t *testing.T) {
 	}
 }
 
-func TestTravelDateUsesUTCCreationDay(t *testing.T) {
+func TestHistoricalTravelDatesPreserveCreationInstant(t *testing.T) {
 	at := time.Date(2026, time.October, 26, 0, 30, 0, 0, time.FixedZone("UTC+02", 2*60*60))
 	input := validInput()
-	input.TravelStart, input.TravelEnd = "2026-10-25", "2026-10-25"
+	input.TravelStart, input.TravelEnd = "2020-02-29", "2020-03-02"
 	enquiry, err := enquiries.New("enquiry-1", input, authorization(t, "organization-1", at))
 	if err != nil {
-		t.Fatalf("UTC creation day incorrectly treated as past: %v", err)
+		t.Fatalf("historical dates rejected: %v", err)
+	}
+	if enquiry.Input() != input {
+		t.Fatal("historical travel input was unexpectedly rewritten")
 	}
 	if !enquiry.CreatedAt().Equal(at) || enquiry.CreatedAt().Location() != time.UTC {
 		t.Fatal("creation timestamp did not preserve its instant in UTC")
+	}
+	if !enquiry.CreationAudit().At.Equal(at) {
+		t.Fatal("historical travel dates changed the audit instant")
 	}
 }
 

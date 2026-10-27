@@ -16,6 +16,7 @@ var ErrInvalidInput = errors.New("invalid enquiry input")
 // There are no ownership, state, creator, passport, medical, or payment fields.
 // Free-text notes and individual traveller records are deliberately absent.
 // Both travel dates may be empty when timing is not yet known.
+// Valid historical dates are accepted for delayed or historical capture.
 type Input struct {
 	ContactName    string
 	ContactEmail   string
@@ -38,7 +39,7 @@ func ValidateInput(input Input, at time.Time) error {
 	if !validEmail(input.ContactEmail) || input.TravellerCount < 1 || input.TravellerCount > 99 {
 		return ErrInvalidInput
 	}
-	if !validTravelDates(input.TravelStart, input.TravelEnd, at) {
+	if !validTravelDates(input.TravelStart, input.TravelEnd) {
 		return ErrInvalidInput
 	}
 	return nil

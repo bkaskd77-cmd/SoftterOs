@@ -115,19 +115,56 @@ func TestAuthorizationDenialDoesNotGenerateIdentifierOrReturnResource(t *testing
 	}
 }
 
-func TestOwnershipComesFromEachValidatedContext(t *testing.T) {
+func TestOwnershipAndAttributionComeFromEachValidatedContext(t *testing.T) {
 	creator, err := application.NewCreator(func() time.Time { return creationTime }, func() (string, error) { return "enquiry-1", nil })
 	if err != nil {
 		t.Fatal(err)
 	}
-	for _, organization := range []string{"org-1", "org-2"} {
-		facts := validContextInput()
-		facts.ActiveOrganizationID = organization
-		facts.Membership.OrganizationID = organization
-		result, err := creator.Create(authz.NewContext(facts), validInput())
-		if err != nil || result.Enquiry.OrganizationID() != organization || result.Audit.OrganizationID != organization {
-			t.Fatalf("ownership was not derived from current context: %v", err)
-		}
+	for _, identity := range []struct {
+		actorID, membershipID, organizationID string
+	}{
+		{"actor-1", "membership-1", "org-1"},
+		{"actor-2", "membership-2", "org-2"},
+	} {
+		t.Run(identity.actorID, func(t *testing.T) {
+			facts := validContextInput()
+			facts.Actor.ID = identity.actorID
+			facts.Membership.ActorID = identity.actorID
+			facts.Membership.ID = identity.membershipID
+			facts.ActiveOrganizationID = identity.organizationID
+			facts.Membership.OrganizationID = identity.organizationID
+			result, err := creator.Create(authz.NewContext(facts), validInput())
+			if err != nil {
+				t.Fatalf("create: %v", err)
+			}
+			enquiry := result.Enquiry
+			if enquiry.OrganizationID() != identity.organizationID || enquiry.CreatedBy() != identity.actorID || enquiry.MembershipID() != identity.membershipID {
+				t.Fatalf("enquiry identities = (%q, %q, %q); want (%q, %q, %q)", enquiry.OrganizationID(), enquiry.CreatedBy(), enquiry.MembershipID(), identity.organizationID, identity.actorID, identity.membershipID)
+			}
+			audit := result.Audit
+			if audit.OrganizationID != identity.organizationID || audit.ActorID != identity.actorID || audit.MembershipID != identity.membershipID {
+				t.Fatalf("audit identities = (%q, %q, %q); want (%q, %q, %q)", audit.OrganizationID, audit.ActorID, audit.MembershipID, identity.organizationID, identity.actorID, identity.membershipID)
+			}
+		})
+	}
+}
+
+func TestCreationCapturesHistoricalTravelDates(t *testing.T) {
+	creator, err := application.NewCreator(func() time.Time { return creationTime }, func() (string, error) { return "enquiry-1", nil })
+	if err != nil {
+		t.Fatal(err)
+	}
+	input := validInput()
+	input.TravelStart, input.TravelEnd = "2020-02-29", "2020-03-02"
+	result, err := creator.Create(authz.NewContext(validContextInput()), input)
+	if err != nil {
+		t.Fatalf("historical enquiry rejected: %v", err)
+	}
+	if result.Enquiry.Input() != input {
+		t.Fatal("historical travel input was unexpectedly rewritten")
+	}
+	if !result.Enquiry.CreatedAt().Equal(creationTime) || !result.Audit.At.Equal(creationTime) {
+		t.Fatal("historical travel dates changed creation or audit time")
 	}
 }
 
