@@ -8,7 +8,9 @@ The approved direction is a Go modular monolith for core business rules and auth
 
 ## Current implementation boundary
 
-Implement manual enquiry creation only. The remaining enquiry-to-internally-approved-draft workflow is a specification, not implemented functionality. Do not add HTTP handlers, database adapters, SQL, migrations, frontend code, authentication vendors, queues, deployment configuration, or unrelated modules without a later task authorizing them.
+The bounded in-memory Go foundation implements manual enquiry creation and authorized `New` → `Under review` → `Qualified` transitions, with atomic review self-assignment, exact-assignee qualification, expected-version checks, and detached audit facts. The [canonical workflow](docs/ENQUIRY_TO_DRAFT_ITINERARY_WORKFLOW.md) defines the detailed policy; other workflow operations remain specifications.
+
+External identity/policy verification, durable persistence, stored-version concurrency, atomic durable audit storage, API, UI, and infrastructure remain unimplemented/deferred. Do not add HTTP handlers, database adapters, SQL, migrations, frontend code, authentication vendors, queues, deployment configuration, or unrelated modules without a later task authorizing them.
 
 Use Go 1.27.3 and only the Go standard library. Keep the explicitly required module path `github.com/bkasdk77-cmd/SoftterOs`. The Git remote is the user-corrected `https://github.com/bkaskd77-cmd/SoftterOs.git`; the spelling difference is intentional preservation of the task's module requirement, not permission to fetch a second repository.
 

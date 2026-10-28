@@ -31,7 +31,9 @@ All applicable conditions must hold. A role label, matching email domain, posses
 
 The manual-creation implementation validates trusted actor, organization, membership, and action-capability facts. The capability is `enquiries.create`, represented once by `authz.CapabilityCreateEnquiry`. Membership start/end bounds are explicit, with an inclusive start and exclusive end. The trusted adapter is responsible for resolving any upstream organization policy before supplying that effective capability. No policy database or external credential verifier exists yet.
 
-Creation has no pre-existing enquiry to assign. Its permission is scoped to creation in the validated active organization; it does not imply future read, edit, assignment, review, or approval rights. The created resource's owning organization comes exclusively from authorization context, never from enquiry input. Assignment administration and subsequent resource operations are deferred.
+Creation has no pre-existing enquiry to assign. Its permission is scoped to creation in the validated active organization; it does not imply read, edit, assignment, review, or approval rights. The created resource's owning organization comes exclusively from authorization context, never from enquiry input.
+
+The bounded in-memory Go foundation also implements authorized `New` → `Under review` → `Qualified` transitions, with atomic review self-assignment, exact-assignee qualification, expected-version checks, and detached audit facts, as defined in the [canonical workflow](ENQUIRY_TO_DRAFT_ITINERARY_WORKFLOW.md). Assignment administration beyond those rules and other resource operations remain deferred. External identity/policy verification, durable persistence, stored-version concurrency, atomic durable audit storage, API, UI, and infrastructure remain unimplemented.
 
 ## Role bundles and duties
 
@@ -71,4 +73,4 @@ Enforce tenant and access rules in Go and eventually in PostgreSQL. Never rely o
 
 Record attributable membership/grant decisions and business changes with safe audit facts. Support, sensitive-field access, exports, retention actions, and AI processing need explicit purposes and controls. Do not log raw secrets or unnecessary personal data. Audit readers also require scoped authorization.
 
-Future tests must cover independent memberships, active-organization switching, cross-tenant identifiers, missing organization capability, missing assignment/purpose, restrictive fields, nested delegation, grant revocation/expiry, parent-child validity, support boundaries, role conflicts, and database enforcement. Manual creation tests cover only the currently implemented subset; no unimplemented access path should be represented as secured.
+Future tests must cover independent memberships, active-organization switching, cross-tenant identifiers, missing organization capability, missing assignment/purpose, restrictive fields, nested delegation, grant revocation/expiry, parent-child validity, support boundaries, role conflicts, and database enforcement. Creation, review, and qualification tests cover the current in-memory subset; no unimplemented access path should be represented as secured.

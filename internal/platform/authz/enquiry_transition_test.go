@@ -75,6 +75,11 @@ func TestTransitionAuthorizationDenials(t *testing.T) {
 		{"revoked membership", func(i *authz.ContextInput) { i.Membership.Revoked = true }},
 		{"wrong membership actor", func(i *authz.ContextInput) { i.Membership.ActorID = "other-actor" }},
 		{"wrong membership organization", func(i *authz.ContextInput) { i.Membership.OrganizationID = "other-org" }},
+		{"resource organization differs from active organization", func(i *authz.ContextInput) {
+			// Keep the grant and requested enquiry in org-1; all other facts
+			// remain valid, including the membership's active-organization binding.
+			i.ActiveOrganizationID, i.Membership.OrganizationID = "org-2", "org-2"
+		}},
 		{"expired membership", func(i *authz.ContextInput) { i.Membership.ValidUntil = authorizationTime }},
 		{"premature membership", func(i *authz.ContextInput) { i.Membership.ValidFrom = authorizationTime.Add(time.Nanosecond) }},
 		{"missing membership start", func(i *authz.ContextInput) { i.Membership.ValidFrom = time.Time{} }},

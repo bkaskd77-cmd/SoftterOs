@@ -10,7 +10,7 @@ The product excludes a public marketplace, payment processing, and a second trav
 
 | Concern | Direction | Present scope |
 | --- | --- | --- |
-| Core business rules and authorization | Go | Manual enquiry creation domain and application boundary |
+| Core business rules and authorization | Go | Manual enquiry creation and bounded in-memory review/qualification transitions |
 | Application structure | Modular monolith | Small packages with explicit boundaries; no speculative services |
 | Primary persistence | PostgreSQL | Deferred; no database, SQL, or migrations in this foundation |
 | Workspaces and user interfaces | TypeScript and Next.js | Deferred; no frontend or HTTP interface |
@@ -20,13 +20,15 @@ Use Go 1.27.3 and standard-library dependencies only. The required module is `gi
 
 Business modules own their invariants. Platform authorization establishes scoped authority; it must not become a generic business-data repository. Future transport and persistence adapters call the application boundary and cannot bypass its checks. Database protections supplement Go enforcement rather than replacing it.
 
-## Manual creation foundation
+## Enquiry foundation
 
 The foundation accepts minimal structured enquiry input: contact name, contact email, destination, traveller count, and an optional complete travel-date range. It has no caller-supplied owning-organization field, passport or medical fields, payment fields, or unrestricted notes field.
 
 The creation operation requires a verified authenticated actor, one active organization, a valid active membership for that actor in that organization, and the exact `enquiries.create` capability. The canonical code constant is `authz.CapabilityCreateEnquiry`. Membership validity has explicit start and end instants; expiration is exclusive. Authorization is evaluated using injected time and the validated context supplies resource ownership and attribution.
 
-The new enquiry starts in `New`. Private domain state and value-returning accessors prevent mutation through exported fields. Input validation and safe stable errors are part of the domain/application boundary. Identifier generation is injected and authorization precedes its invocation. The operation returns attributable creation/audit facts without persisting them. No update, overwrite, storage, HTTP, or credential-verification mechanism is provided.
+The new enquiry starts in `New`. Private domain state and value-returning accessors prevent mutation through exported fields. Input validation and safe stable errors are part of the domain/application boundary. Identifier generation is injected and authorization precedes its invocation. The operation returns attributable creation/audit facts without persisting them. No in-place overwrite, storage, HTTP, or credential-verification mechanism is provided.
+
+Authorized `New` → `Under review` → `Qualified` transitions are also implemented in memory, with atomic review self-assignment, exact-assignee qualification, expected-version checks, and detached audit facts. Detailed authorization and assignment policy is defined in the [canonical workflow](ENQUIRY_TO_DRAFT_ITINERARY_WORKFLOW.md).
 
 The in-process authorization context is a trusted-facts interface, not an authentication protocol. A future adapter must authenticate credentials, resolve current membership and organization policy from trusted sources, and construct the context. Client JSON, AI output, stale caches, or claimed membership fields must never directly populate trusted facts.
 
@@ -42,14 +44,14 @@ Traveller access is a separate, operator-branded, trip-specific, expiring, revoc
 
 Preserve recovered work before reconstruction when it exists. Keep local commits narrow and inspect staged content for secrets. Do not commit credentials, toolchains, caches, generated files, or machine-specific settings. A successful local commit is not deployment, backup outside the computer, or evidence of a durable business audit system.
 
-Current security verification covers manual creation's authorization denials, ownership derivation, `New` state, input and date invariants, audit attribution, and resistance to mutation through returned values. Requirements for later workflow, collaboration, database, support, traveller, and AI behavior belong to the future test plans in the other foundation documents.
+Current security verification covers manual creation's authorization denials, ownership derivation, `New` state, input and date invariants, audit attribution, and resistance to mutation through returned values, plus the two enquiry transitions' authorization, assignment, state, and expected-version checks. Requirements for other workflow operations, collaboration, database, support, traveller, and AI behavior belong to the future test plans in the other foundation documents.
 
 ## Explicitly deferred decisions
 
-- Authentication/session provider, credential verification, request-context construction, refresh and revocation handling.
-- Organization capability registry, role administration, assignment issuance, collaboration delegation, and policy storage.
-- PostgreSQL schema, row-level security design, transaction boundaries, identifier uniqueness, concurrency/version representation, and durable audit storage.
-- HTTP/API contracts, UI structure, transport validation, pagination, search, background processing, and deployment.
+- External identity/policy verification, authentication/session provider, request-context construction, refresh and revocation handling.
+- Organization capability registry, role administration, assignment administration beyond review self-assignment, collaboration delegation, and policy storage.
+- PostgreSQL schema, row-level security design, transaction boundaries, identifier uniqueness, stored-version concurrency, and atomic durable audit storage.
+- HTTP/API contracts, UI structure, transport validation, pagination, search, background processing, infrastructure, and deployment.
 - Itinerary content model, review snapshot serialization/digests, publication and traveller access mechanisms.
 - Retention periods, deletion schedules, residency, backup/restore, encryption and key management, and operational incident procedures.
 - AI providers, models, permitted data classes, hosting, evaluation, cost controls, and human-acceptance UI.

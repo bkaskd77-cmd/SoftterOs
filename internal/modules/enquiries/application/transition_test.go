@@ -145,6 +145,11 @@ func TestWorkflowAuthorizationDenialsLeaveEveryValueUnchanged(t *testing.T) {
 		{"coherent other tenant", func(i *authz.ContextInput) {
 			i.ActiveOrganizationID, i.Membership.OrganizationID, i.TransitionGrant.OrganizationID = "org-2", "org-2", "org-2"
 		}},
+		{"resource organization differs from active organization", func(i *authz.ContextInput) {
+			// Leave the org-1 grant/enquiry, exact assignee, action, state and
+			// version valid so only the resource-to-active-organization guard denies.
+			i.ActiveOrganizationID, i.Membership.OrganizationID = "org-2", "org-2"
+		}},
 	}
 	for _, qualifying := range []bool{false, true} {
 		for _, tc := range cases {

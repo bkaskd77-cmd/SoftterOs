@@ -6,7 +6,7 @@ Require one authenticated actor and one explicit active organization on every bu
 
 Authentication establishes identity; authorization establishes whether that identity may perform this action in this context now. Constructors for in-process authorization facts do not prove identity. A future trusted adapter must verify external credentials and resolve current policy before constructing context. Never accept capabilities, ownership, organization context, or membership facts merely because a client or AI supplied them.
 
-The implemented scope is manual enquiry creation. It checks actor, active organization, membership binding/status/validity, and canonical `enquiries.create` authority. Broader organization-policy, assignment, collaboration, support, database, and traveller controls below are requirements for later implementation, not claims that those facilities already exist.
+The bounded in-memory Go foundation implements manual enquiry creation and authorized `New` → `Under review` → `Qualified` transitions, with atomic review self-assignment, exact-assignee qualification, expected-version checks, and detached audit facts. The [canonical workflow](ENQUIRY_TO_DRAFT_ITINERARY_WORKFLOW.md) defines detailed policy. External identity/policy verification, broader assignment administration, collaboration, support, durable persistence, stored-version concurrency, atomic durable audit storage, traveller controls, API, UI, and infrastructure remain unimplemented/deferred.
 
 ## Tenant, field, and support controls
 
@@ -33,7 +33,7 @@ Review submissions and approval decisions bind to immutable snapshots. Record th
 
 Future durable audit events must record at least event identity, action, outcome, actor, active organization, owning organization where different, membership or grant basis, resource identity, relevant revision/snapshot, timestamp, correlation identifier, and safe reason category. Record denied sensitive actions without revealing another tenant's existence or data. Protect audit integrity and restrict audit viewing/export. Do not place raw contacts, secrets, passports, medical details, or full AI prompts into audit entries.
 
-Manual creation currently returns creation audit facts with the business result. There is no database transaction or durable audit sink. A future adapter must atomically commit business state and its audit evidence, or leave both uncommitted; it must enforce identifier uniqueness and safe retry behavior. Do not claim returned facts alone provide tamper resistance or durable accountability.
+Manual creation and the two enquiry transitions return detached audit facts with their business results. There is no database transaction or durable audit sink. A future adapter must atomically commit business state and its audit evidence, or leave both uncommitted; it must enforce identifier uniqueness and safe retry behavior. Do not claim returned facts alone provide tamper resistance or durable accountability.
 
 ## AI proposal boundary
 
