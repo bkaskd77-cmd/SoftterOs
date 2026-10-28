@@ -18,7 +18,8 @@ const StateNew State = "New"
 var ErrInvalidID = errors.New("invalid enquiry identifier")
 
 // Enquiry is an immutable value. Its zero value is not a created enquiry.
-// Ownership and attribution can only enter through an authorization grant.
+// New derives ownership and attribution from authorization; Restore accepts
+// historical values only through the validated, trusted storage boundary.
 type Enquiry struct {
 	id                   string
 	organizationID       string
