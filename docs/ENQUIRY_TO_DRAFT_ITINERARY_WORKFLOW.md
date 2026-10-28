@@ -6,6 +6,8 @@ This workflow starts with manual enquiry capture and ends with an internally app
 
 Manual enquiry creation and the in-memory `New` → `Under review` → `Qualified` transitions, including review self-assignment, are implemented. Other transitions, drafting, reassignment, revisions and approval below remain specifications for future bounded work. There is no HTTP interface, database, durable audit log, frontend, AI integration, or traveller delivery mechanism.
 
+**Proposal only:** [Enquiry persistence design](ENQUIRY_PERSISTENCE_DESIGN.md) describes storage for these three implemented operations and requires review before implementation; it does not change this workflow's approved policies or authorize database work.
+
 ## Capture and ownership
 
 An authenticated actor selects one explicit active organization. Creation requires a current active membership for that actor and organization and canonical `enquiries.create` authority (`authz.CapabilityCreateEnquiry`). The owning organization is derived exclusively from validated authorization context. Client enquiry fields cannot select or replace it.
