@@ -14,7 +14,9 @@ External identity/policy verification, durable persistence, stored-version concu
 
 Persistence Step 1 adds only the authorized [SQL foundation and disposable local tests](db/README.md). It does not integrate application persistence or authorize a Go adapter, dependencies, real data, or deployment. Keep later database work explicitly bounded.
 
-Use Go 1.27.3 and only the Go standard library. Keep the explicitly required module path `github.com/bkasdk77-cmd/SoftterOs`. The Git remote is the user-corrected `https://github.com/bkaskd77-cmd/SoftterOs.git`; the spelling difference is intentional preservation of the task's module requirement, not permission to fetch a second repository.
+Step 2A authorizes only the [PostgreSQL connection/transaction infrastructure](internal/platform/postgres/README.md), native pgx v5/pgxpool and necessary pinned transitives, plus synthetic integration tests. Workflow persistence, external authentication and deployment remain deferred. The dependency exception is confined to infrastructure; domain and authorization stay standard-library-only.
+
+Use Go 1.27.3 and only the Go standard library outside the explicit Step 2A infrastructure exception. Keep the explicitly required module path `github.com/bkasdk77-cmd/SoftterOs`. The Git remote is the user-corrected `https://github.com/bkaskd77-cmd/SoftterOs.git`; the spelling difference is intentional preservation of the task's module requirement, not permission to fetch a second repository.
 
 ## Security invariants
 
@@ -33,7 +35,7 @@ Use Go 1.27.3 and only the Go standard library. Keep the explicitly required mod
 
 Read relevant existing code and tests in batches before modifying them. Preserve unrelated local changes and stage only task-relevant files. Never log credentials or `.env` values. Keep toolchains, caches, generated files, and machine-specific settings out of commits.
 
-For Go business or authorization changes, format with `gofmt`, confirm no third-party dependencies, and run:
+For Go changes, format with `gofmt`, confirm dependencies are limited to the approved infrastructure exception, and run:
 
 ```text
 go test -count=1 ./...

@@ -16,7 +16,7 @@ The product excludes a public marketplace, payment processing, and a second trav
 | Workspaces and user interfaces | TypeScript and Next.js | Deferred; no frontend or HTTP interface |
 | AI, machine learning, optimization | Bounded Python services only when justified | Deferred; proposal and human-acceptance rules are specified |
 
-Use Go 1.27.3 and standard-library dependencies only. The required module is `github.com/bkasdk77-cmd/SoftterOs`. The repository was selected as `https://github.com/bkaskd77-cmd/SoftterOs.git` after the user corrected the owner spelling. These identifiers currently differ; the explicit module requirement is retained. Reconcile naming deliberately in a later authorized change before external integrations depend on it.
+Use Go 1.27.3 and standard-library dependencies, with the narrow [Step 2A pgx infrastructure exception](../internal/platform/postgres/README.md). The required module is `github.com/bkasdk77-cmd/SoftterOs`. The repository was selected as `https://github.com/bkaskd77-cmd/SoftterOs.git` after the user corrected the owner spelling. These identifiers currently differ; the explicit module requirement is retained. Reconcile naming deliberately in a later authorized change before external integrations depend on it.
 
 Business modules own their invariants. Platform authorization establishes scoped authority; it must not become a generic business-data repository. Future transport and persistence adapters call the application boundary and cannot bypass its checks. Database protections supplement Go enforcement rather than replacing it.
 

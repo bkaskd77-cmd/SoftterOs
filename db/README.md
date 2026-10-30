@@ -1,8 +1,9 @@
 # Local PostgreSQL SQL foundation (Persistence Step 1)
 
 Implemented for disposable, synthetic local tests only. The Go application still
-uses immutable in-memory values; there is no Go database adapter, driver, or
-application transaction coordinator. The broader
+uses immutable in-memory values; there is no enquiry database adapter or workflow
+transaction coordinator. The bounded [Step 2A infrastructure](../internal/platform/postgres/README.md)
+adds the driver and connection/transaction boundary only. The broader
 [persistence design](../docs/ENQUIRY_PERSISTENCE_DESIGN.md) remains proposed beyond
 this explicitly authorized SQL slice.
 
@@ -107,6 +108,8 @@ harness before removal. Recovery is not a broad automatic cleanup procedure.
 
 ## Files and privileges
 
+Step 2A adds a separate [Go connection/transaction boundary](../internal/platform/postgres/README.md). Run `python3 scripts/test-postgres-go.py` (and repeat with `--race`) for its synthetic integration suite. Its new test plumbing reuses the reviewed private-cluster lifecycle utilities and migrations without changing them; it creates a UUID-marked database/four roles, checks exact OIDs/owners/comments before cleanup, and preserves the initial server lifecycle. It requires the existing Go 1.27.3 toolchain and the approved pinned modules. It does not implement enquiry workflow persistence.
+
 - `bootstrap.sql`: creates only the uniquely named test roles and their finite
   runtime/writer timeout defaults. Names and the run marker come from the harness.
 - `migrations/001_tables.sql`: identifiers/finite instants, separate access and
@@ -200,9 +203,9 @@ role switching, not proof of genuine runtime login or peer authentication.
 A separate owner-only corrupt-history injection tests structural checks, not
 runtime permissions. No authentication rule is weakened.
 
-Still deferred: Go driver/adapter, command orchestration, stored-version CAS
+Still deferred: enquiry adapter, command orchestration, stored-version CAS
 integration, fresh human/permission and expiry/revocation integration, durable
-success-return ordering, actual pool cleanup/cancellation/discard behavior,
+workflow success-return ordering,
 duplicate/ambiguous-commit recovery, fingerprint keys, real-data controls and
 production operations. SQL fixtures do not approve all broader design decisions
 or establish authenticity of supplied authorization/audit facts.

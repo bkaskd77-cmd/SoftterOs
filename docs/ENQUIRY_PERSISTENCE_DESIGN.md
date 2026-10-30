@@ -2,6 +2,8 @@
 
 **PROPOSED — requires review before implementation.**
 
+**Bounded Step 2A status:** [Connection/transaction infrastructure](../internal/platform/postgres/README.md) now implements explicit bounded pgx pooling, `READ COMMITTED` scoped transactions and cleanup/outcome handling. It implements no enquiry storage command, authority-fence orchestration, freshness/expiry check, receipt recovery or external authentication. Only the infrastructure dependency exception and this bounded slice are approved; the broader proposal and remaining decisions below remain deferred.
+
 ## Status, baseline, and scope
 
 This document proposes storage for only manual enquiry creation, starting review, and qualification. It does not approve implementation, dependencies, database installation, credentials, or a change to business policy. The reviewed baseline is `ed24609a8f57158ea7d7eeb590a5005ce4a94081` (`test: close enquiry authorization audit gaps`). At design start, local `main` and `origin/main` were synchronized and the working tree was clean; origin was `https://github.com/bkaskd77-cmd/SoftterOs.git`.
