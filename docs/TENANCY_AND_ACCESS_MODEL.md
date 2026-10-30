@@ -69,7 +69,7 @@ Do not expose internal enquiries, working drafts, previous unpublished versions,
 
 ## Enforcement and accountability
 
-Enforce tenant and access rules in Go and eventually in PostgreSQL. Never rely on frontend hiding, client-side filtering, inferred tenant IDs, or a single unrestricted database user for business authorization. Every persistence path must constrain authoritative ownership, including joins and background work. The exact row-level-security and transaction-context design is deferred and must account for connection pooling and privileged operations.
+Enforce tenant and access rules in Go and eventually in PostgreSQL. Never rely on frontend hiding, client-side filtering, inferred tenant IDs, or a single unrestricted database user for business authorization. Every persistence path must constrain authoritative ownership, including joins and background work. The [SQL foundation](../db/README.md) tests bounded row-level security; application transaction-context integration and production design remain deferred and must account for connection pooling and privileged operations.
 
 Record attributable membership/grant decisions and business changes with safe audit facts. Support, sensitive-field access, exports, retention actions, and AI processing need explicit purposes and controls. Do not log raw secrets or unnecessary personal data. Audit readers also require scoped authorization.
 

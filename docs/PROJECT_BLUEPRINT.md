@@ -12,7 +12,7 @@ The product excludes a public marketplace, payment processing, and a second trav
 | --- | --- | --- |
 | Core business rules and authorization | Go | Manual enquiry creation and bounded in-memory review/qualification transitions |
 | Application structure | Modular monolith | Small packages with explicit boundaries; no speculative services |
-| Primary persistence | PostgreSQL | Deferred; no database, SQL, or migrations in this foundation |
+| Primary persistence | PostgreSQL | SQL-only local test foundation; Go adapter and application persistence deferred |
 | Workspaces and user interfaces | TypeScript and Next.js | Deferred; no frontend or HTTP interface |
 | AI, machine learning, optimization | Bounded Python services only when justified | Deferred; proposal and human-acceptance rules are specified |
 
@@ -50,7 +50,7 @@ Current security verification covers manual creation's authorization denials, ow
 
 - External identity/policy verification, authentication/session provider, request-context construction, refresh and revocation handling.
 - Organization capability registry, role administration, assignment administration beyond review self-assignment, collaboration delegation, and policy storage.
-- PostgreSQL schema, row-level security design, transaction boundaries, identifier uniqueness, stored-version concurrency, and atomic durable audit storage.
+- Application integration of the [SQL foundation](../db/README.md), transaction boundaries, stored-version concurrency, and atomic durable audit storage; production database approval remains separate.
 - HTTP/API contracts, UI structure, transport validation, pagination, search, background processing, infrastructure, and deployment.
 - Itinerary content model, review snapshot serialization/digests, publication and traveller access mechanisms.
 - Retention periods, deletion schedules, residency, backup/restore, encryption and key management, and operational incident procedures.

@@ -12,6 +12,8 @@ The bounded in-memory Go foundation implements manual enquiry creation and autho
 
 External identity/policy verification, durable persistence, stored-version concurrency, atomic durable audit storage, API, UI, and infrastructure remain unimplemented/deferred. Do not add HTTP handlers, database adapters, SQL, migrations, frontend code, authentication vendors, queues, deployment configuration, or unrelated modules without a later task authorizing them.
 
+Persistence Step 1 adds only the authorized [SQL foundation and disposable local tests](db/README.md). It does not integrate application persistence or authorize a Go adapter, dependencies, real data, or deployment. Keep later database work explicitly bounded.
+
 Use Go 1.27.3 and only the Go standard library. Keep the explicitly required module path `github.com/bkasdk77-cmd/SoftterOs`. The Git remote is the user-corrected `https://github.com/bkaskd77-cmd/SoftterOs.git`; the spelling difference is intentional preservation of the task's module requirement, not permission to fetch a second repository.
 
 ## Security invariants
