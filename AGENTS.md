@@ -18,6 +18,8 @@ Step 2A authorizes only the [PostgreSQL connection/transaction infrastructure](i
 
 The separately authorized [internal enquiry loader](internal/modules/enquiries/postgres/README.md) reconstructs validated historical values within that transaction boundary. It grants no business read access and implements no workflow writes or current authorization orchestration.
 
+The bounded [creation authorization prerequisite](internal/modules/enquiries/postgres/CREATION_AUTHORIZATION.md) checks current database membership/entitlement facts under authority fences and requires coordinated, request-bound trusted identity attestation. It returns no reusable authority and implements no workflow writes or identity provider.
+
 Use Go 1.27.3 and only the Go standard library outside the explicit Step 2A infrastructure exception. Keep the explicitly required module path `github.com/bkasdk77-cmd/SoftterOs`. The Git remote is the user-corrected `https://github.com/bkaskd77-cmd/SoftterOs.git`; the spelling difference is intentional preservation of the task's module requirement, not permission to fetch a second repository.
 
 ## Security invariants
