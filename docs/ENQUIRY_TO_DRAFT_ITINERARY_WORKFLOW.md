@@ -4,7 +4,7 @@
 
 This workflow starts with manual enquiry capture and ends with an internally approved draft itinerary. It excludes quotation, publication, reservations, supplier confirmation, and payment processing. Passport and medical-data collection are outside the workflow.
 
-Manual enquiry creation and the in-memory `New` → `Under review` → `Qualified` transitions, including review self-assignment, are implemented. Other transitions, drafting, reassignment, revisions and approval below remain specifications for future bounded work. There is no HTTP interface, Go database adapter, integrated durable audit log, frontend, AI integration, or traveller delivery mechanism.
+Manual enquiry creation and the in-memory `New` → `Under review` → `Qualified` transitions, including review self-assignment, are implemented. Other transitions, drafting, reassignment, revisions and approval below remain specifications for future bounded work. There is no HTTP interface, workflow write adapter, integrated durable audit log, frontend, AI integration, or traveller delivery mechanism. The separately authorized [internal enquiry loader](../internal/modules/enquiries/postgres/README.md) reconstructs historical values without providing business read authorization.
 
 **Persistence boundary:** [Enquiry persistence design](ENQUIRY_PERSISTENCE_DESIGN.md) describes storage for these three operations. Its SQL-only local test slice is implemented as documented there; the broader design remains proposed and does not change this workflow's approved policies or authorize further database work.
 

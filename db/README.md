@@ -1,7 +1,8 @@
 # Local PostgreSQL SQL foundation (Persistence Step 1)
 
 Implemented for disposable, synthetic local tests only. The Go application still
-uses immutable in-memory values; there is no enquiry database adapter or workflow
+uses immutable in-memory values; the [internal enquiry loader](../internal/modules/enquiries/postgres/README.md)
+only reconstructs historical storage values. There is no workflow write adapter or
 transaction coordinator. The bounded [Step 2A infrastructure](../internal/platform/postgres/README.md)
 adds the driver and connection/transaction boundary only. The broader
 [persistence design](../docs/ENQUIRY_PERSISTENCE_DESIGN.md) remains proposed beyond

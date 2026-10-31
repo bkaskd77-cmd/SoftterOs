@@ -100,10 +100,11 @@ python3 scripts/test-postgres-go-runner.py
 
 The runner uses the existing private cluster and reviewed migrations, with only
 synthetic actor/membership anchors and a disposable test-only RLS probe table.
-There is no enquiry storage adapter or business-command fixture implementation.
-Tests install a restricted session/effective identity in an AfterConnect hook
-that exists exclusively in `_test.go`; production code has no such hook or
-administrative role switching. This proves SQL permission behavior, not genuine
+The separately authorized [enquiry loader](../../modules/enquiries/postgres/README.md)
+adds read-only mapping tests; there is no workflow write adapter or business-command implementation.
+Infrastructure tests install a restricted session/effective identity in a test-only
+AfterConnect hook; loader tests use transaction-local restricted roles. Production
+code has no administrative role switching. This proves SQL permission behavior, not genuine
 runtime login/peer authentication. Administrative setup and termination of the
 exact acquired test backend remain exclusively fixture plumbing.
 

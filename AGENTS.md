@@ -16,6 +16,8 @@ Persistence Step 1 adds only the authorized [SQL foundation and disposable local
 
 Step 2A authorizes only the [PostgreSQL connection/transaction infrastructure](internal/platform/postgres/README.md), native pgx v5/pgxpool and necessary pinned transitives, plus synthetic integration tests. Workflow persistence, external authentication and deployment remain deferred. The dependency exception is confined to infrastructure; domain and authorization stay standard-library-only.
 
+The separately authorized [internal enquiry loader](internal/modules/enquiries/postgres/README.md) reconstructs validated historical values within that transaction boundary. It grants no business read access and implements no workflow writes or current authorization orchestration.
+
 Use Go 1.27.3 and only the Go standard library outside the explicit Step 2A infrastructure exception. Keep the explicitly required module path `github.com/bkasdk77-cmd/SoftterOs`. The Git remote is the user-corrected `https://github.com/bkaskd77-cmd/SoftterOs.git`; the spelling difference is intentional preservation of the task's module requirement, not permission to fetch a second repository.
 
 ## Security invariants

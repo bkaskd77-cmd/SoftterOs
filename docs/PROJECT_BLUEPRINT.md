@@ -12,7 +12,7 @@ The product excludes a public marketplace, payment processing, and a second trav
 | --- | --- | --- |
 | Core business rules and authorization | Go | Manual enquiry creation and bounded in-memory review/qualification transitions |
 | Application structure | Modular monolith | Small packages with explicit boundaries; no speculative services |
-| Primary persistence | PostgreSQL | SQL-only local test foundation; Go adapter and application persistence deferred |
+| Primary persistence | PostgreSQL | SQL foundation, bounded connection/transaction infrastructure and [internal loading](../internal/modules/enquiries/postgres/README.md); workflow writes deferred |
 | Workspaces and user interfaces | TypeScript and Next.js | Deferred; no frontend or HTTP interface |
 | AI, machine learning, optimization | Bounded Python services only when justified | Deferred; proposal and human-acceptance rules are specified |
 
