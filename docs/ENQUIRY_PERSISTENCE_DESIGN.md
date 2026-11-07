@@ -10,7 +10,7 @@
 
 ## Status, baseline, and scope
 
-**Bounded first-attempt creation status:** The [internal writer](../internal/modules/enquiries/postgres/FIRST_CREATION.md) implements manual creation in one fenced transaction using the approved version-1 fingerprint contract below. Only this synthetic-data slice is authorized; replay/recovery, production identity/key management, real data and other workflow writes remain deferred.
+**Bounded manual creation status:** The [internal writer](../internal/modules/enquiries/postgres/FIRST_CREATION.md) implements manual creation in one fenced transaction using the approved version-1 fingerprint contract below. [Internal receipt recovery](../internal/modules/enquiries/postgres/FIRST_CREATION.md#read-only-receipt-recovery) can separately acknowledge an earlier committed manual creation under fresh creation authority. Both slices are for synthetic data. Production identity/key management, real data and other workflow writes remain deferred.
 
 This document proposes storage for only manual enquiry creation, starting review, and qualification. It does not approve implementation, dependencies, database installation, credentials, or a change to business policy. The reviewed baseline is `ed24609a8f57158ea7d7eeb590a5005ce4a94081` (`test: close enquiry authorization audit gaps`). At design start, local `main` and `origin/main` were synchronized and the working tree was clean; origin was `https://github.com/bkaskd77-cmd/SoftterOs.git`.
 
@@ -128,10 +128,9 @@ Proposed ordering for a new command:
 
 ### Approved first-attempt creation fingerprint contract
 
-The following version-1 contract is approved only for the bounded synthetic-data
-manual-creation milestone. It supersedes the fingerprint approval gate below for
-this slice; replay, recovery, production key management and real-data operation
-remain deferred.
+The following version-1 contract applies to bounded synthetic-data manual
+creation and its separate internal receipt recovery. Production key management
+and real-data operation remain deferred.
 
 Use standard-library HMAC-SHA-256 with an explicitly injected, exactly 32-byte
 secret and store the complete 32-byte result. Reject missing or incorrectly sized
@@ -172,8 +171,8 @@ Duplicate prevention uses the existing `(organization_id, membership_id,
 request_key)` uniqueness constraint, never fingerprint uniqueness. Reserve the
 key only after current authorization and input validation; after any reservation
 wait, refresh action-time authorization before generating IDs or creating the
-domain value. Any already committed scoped key is rejected, even for identical
-input: return no stored result and do not replay, overwrite or recover it. A
+domain value. First-attempt creation rejects any already committed scoped key,
+even for identical input. It returns no stored result. A
 competing uncommitted reservation may block within the existing finite deadlines;
 if its transaction rolls back, a waiting fully authorized attempt may become the
 first committed creation. No automatic retry is performed. A fingerprint proves
@@ -186,6 +185,8 @@ confirmed rollback, cleanup failure and unknown-commit distinctions; an uncertai
 outcome must not be retried automatically or represented as successful creation.
 
 Two authorized reviewers can concurrently claim the same `New` enquiry, but only one may commit version 2 and self-assignment. The loser observes the committed version/state after waiting and fails; its receipt reservation and candidate event roll back. A lock timeout must not skip the row or choose an alternative assignee. Qualification rechecks the exact stored membership, not merely the same actor or a different membership belonging to that person. Stale expected versions are never refreshed automatically. A new request repeating an already completed transition remains invalid.
+
+**Approved internal creation recovery:** A caller with fresh attestation and current `enquiries.create` authority through the original actor, organization and membership may recover only the historical acknowledgement for a matching manual creation. Use the original request key and exact creation input, the same configured key used for the version-1 MAC, and a separately attested request ID. Under the same authority fences, read and verify the eligible receipt and its immutable creation bindings in one statement, compare its stored MAC in constant time, and recheck validity before releasing receipt information. The acknowledgement contains the tenant, enquiry and event IDs, original action, resulting version and action instant. A receipt that is not visible leaves completion unconfirmed. This path performs no record writes and never retries the original command. See the [bounded recovery contract](../internal/modules/enquiries/postgres/FIRST_CREATION.md#read-only-receipt-recovery).
 
 **Proposed command-recovery semantics require approval.** Recommend a scoped idempotency key plus receipt for all three commands, especially creation, which otherwise has no expected-version duplicate guard. The same key must identify the same actor, membership, command, selector, expected version, and exact validated creation input. Use a versioned keyed fingerprint to compare private input without storing it twice; no plain hash advertised as anonymization. Approve canonicalization, key management, and receipt lifetime before real data. Synthetic tests can use an ephemeral test key. The request key is never an authorization secret or resource ID.
 
@@ -252,7 +253,7 @@ Beyond the explicitly authorized SQL-only Step 1 experiment, recommendations rem
 | Keys and representation | Step 1 tests composite tenant keys, closed schema states/versions and microsecond SQL storage. Generated application IDs and the future adapter's pre-binding precision contract still need approval. Rejecting unsupported storage precision narrows accepted storage facts, not domain values. |
 | Authority experiment | Step 1 tests synthetic authority rows, revisions and the limited lock helper. Future coordinator/identity integration and cooperating-writer revocation ordering remain separate decisions; these SQL fixtures do not implement policy derivation or freshness. |
 | In-flight authorization and expiry | Approve command-before-revocation ordering under locks and the final conservative expiry check. If revocation must cancel already in-flight operations or validity must hold at a different ordering point, resolve that requirement before coding. |
-| Duplicate/commit recovery | Step 1 tests receipt structure/immutability only. Canonical keyed fingerprints, minimal recovered acknowledgements and their access checks still need approval. Alternatively defer automatic recovery and explicitly return outcome unknown; blindly retrying creation is not acceptable. No receipt response is an implicit general read permission. |
+| Duplicate/commit recovery | The version-1 keyed fingerprint and minimal acknowledgement under fresh authority are approved for internal synthetic manual creation only. Other command recovery, user-facing access, production keys and receipt lifetime require separate approval. Unresolved completion must never trigger an automatic retry. |
 
 Before accepting **untrusted requests**, separately approve and implement verified identity/session construction, authoritative policy/operational-capability and grant derivation/administration, coordinated revocation/freshness contract, server-side request/response and field controls, command-recovery authorization, scoped reads, bounded resource use, and safe denial telemetry. Synthetic fixtures cannot substitute for these. The existing human-only transition rule and AI prohibition remain mandatory; no AI integration is implied.
 

@@ -2,8 +2,9 @@
 
 The loader reconstructs database-to-domain values for trusted internal callers.
 It grants no public read capability or external authentication. The separately
-authorized [first-attempt creation writer](FIRST_CREATION.md) shares this package;
-other workflow writes, receipt recovery and transport integration remain deferred.
+authorized [first-attempt creation writer](FIRST_CREATION.md) and its [internal
+receipt recovery](FIRST_CREATION.md#read-only-receipt-recovery) share this package.
+Other workflow writes and transport integration remain deferred.
 
 Call `Load(ctx, tx, organizationID, enquiryID)` **inside** the existing
 [`postgres.DB.WithTx`](../../../platform/postgres/README.md) callback, using that

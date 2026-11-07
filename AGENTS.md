@@ -20,7 +20,7 @@ The separately authorized [internal enquiry loader](internal/modules/enquiries/p
 
 The bounded [creation authorization prerequisite](internal/modules/enquiries/postgres/CREATION_AUTHORIZATION.md) checks current database membership/entitlement facts under authority fences and requires coordinated, request-bound trusted identity attestation. It returns no reusable authority and implements no workflow writes or identity provider.
 
-The separately authorized [first-attempt creation writer](internal/modules/enquiries/postgres/FIRST_CREATION.md) composes that authorization with atomic enquiry/event/receipt persistence for synthetic internal use. Duplicate keys are rejected; replay/recovery, production identity/key management and other workflow writes remain deferred.
+The separately authorized [first-attempt creation writer](internal/modules/enquiries/postgres/FIRST_CREATION.md) composes that authorization with atomic enquiry/event/receipt persistence for synthetic internal use. Creation rejects duplicate keys. [Internal receipt recovery](internal/modules/enquiries/postgres/FIRST_CREATION.md#read-only-receipt-recovery) uses fresh creation authority and returns only a historical acknowledgement. Production identity/key management and other workflow writes remain deferred.
 
 Use Go 1.27.3 and only the Go standard library outside the explicit Step 2A infrastructure exception. Keep the explicitly required module path `github.com/bkasdk77-cmd/SoftterOs`. The Git remote is the user-corrected `https://github.com/bkaskd77-cmd/SoftterOs.git`; the spelling difference is intentional preservation of the task's module requirement, not permission to fetch a second repository.
 
