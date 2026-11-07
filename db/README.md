@@ -120,13 +120,20 @@ Step 2A adds a separate [Go connection/transaction boundary](../internal/platfor
   allowed row transitions, and deferred final history/receipt checks.
 - `migrations/003_permissions.sql`: explicit grants, forced RLS, structural
   context checks and the narrow authority-fence lock helper.
+- `migrations/004_assigned_enquiry_read.sql`: extend the effective entitlement
+  allowlist for the [assigned read](../docs/ENQUIRY_TO_DRAFT_ITINERARY_WORKFLOW.md#assigned-enquiry-read).
+  It adds no grants, data, RLS policies or privileges.
 - `tests/integration.sql`: synthetic fixtures and invoker-rights assertions.
   Temporary fixture helpers are test-only and disappear with the connection.
 - `tests/commit_denials.sql`: separate connections prove missing events,
   missing receipts and pending receipts reach COMMIT, fail with 23514, and leave
   all business/event/receipt rows uncommitted.
 
-Each migration is transactional and requires a fresh schema; there is no
+Each migration is transactional. Migrations 001 through 003 establish the
+baseline in a fresh schema. The SQL harness tests fresh application and a
+disposable upgrade from that baseline, including exact preservation of existing
+entitlements, capability-table privileges and RLS, and rejection of unsupported
+capabilities. There is no
 `IF NOT EXISTS` repair/overwrite route. The owner role owns schemas/tables and
 has an explicit migration RLS policy; it remains privileged. Runtime gets tenant
 reads, enquiry/event/receipt inserts, and only transition/completion column

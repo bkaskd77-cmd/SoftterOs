@@ -64,6 +64,43 @@ Validate authorization, current state, assignment, and expected version before m
 
 The implementation uses a minimal in-memory expected-version counter for these two transitions. Persistent version comparison, transaction representation and durable audit implementation remain deferred; future persistence must check the stored version and current authority atomically with state and audit writes. Returning in-memory audit facts alone is not a durable audit record.
 
+### Assigned enquiry read
+
+The internal by-ID read requires the independent `enquiries.read` effective
+membership entitlement. Trusted entry code binds the actor and request ID, and
+the transaction obtains fresh authenticated human attestation. The selected
+active organization must own the enquiry. The actor must hold a current active,
+unrevoked membership in that organization and that exact membership must be the
+current assignee. Membership validity includes its start and excludes its end.
+Entitlement removal revokes the capability. Creation, review, qualification,
+administration, historical assignment and possession of an ID grant no read
+authority. Collaboration and separate per-enquiry read grants are outside this
+slice.
+
+Only `Under review` and `Qualified` are readable. The result contains the
+enquiry ID, current state and version, destination, traveller count, and
+optional travel start and end as calendar dates. A narrow projection leaves out
+contact name and email, attribution, audit history, receipts and fingerprints.
+Missing and inaccessible enquiries yield the same empty unavailable result.
+Operational failures use safe errors and every failure returns an empty view.
+This is current enquiry data. [Creation receipt recovery](../internal/modules/enquiries/postgres/FIRST_CREATION.md#read-only-receipt-recovery)
+returns a separate historical acknowledgement.
+
+One bounded transaction acquires the shared actor fence and then organization
+fence before attestation and current authority reads. A tenant-qualified
+`FOR SHARE` enquiry lock protects the checked state and assignment while trip
+fields are selected. The operation checks fresh database time after locking and
+again before completion, and releases the view only after successful transaction
+completion. Compliant revocation and row updates order against these locks.
+The final check establishes validity within the transaction. The read performs
+no persistent business writes or success-event or receipt writes.
+
+The approved slice uses synthetic identities and entitlements in the disposable
+PostgreSQL harness. The forward migration only permits the new entitlement value.
+It assigns that authority to no membership. Unassigned intake reads, persistent
+start-review, production identity and entitlement administration, HTTP and UI
+remain separate work.
+
 ## Itinerary lifecycle and versions
 
 | State | Meaning |

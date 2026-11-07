@@ -33,13 +33,16 @@ func ValidateInput(input Input, at time.Time) error {
 	if at.IsZero() || at.UTC().Year() < 1 || at.UTC().Year() > 9999 {
 		return ErrInvalidInput
 	}
-	if !validText(input.ContactName, 120) || !validText(input.Destination, 200) {
+	if !validText(input.ContactName, 120) || !validEmail(input.ContactEmail) {
 		return ErrInvalidInput
 	}
-	if !validEmail(input.ContactEmail) || input.TravellerCount < 1 || input.TravellerCount > 99 {
-		return ErrInvalidInput
-	}
-	if !validTravelDates(input.TravelStart, input.TravelEnd) {
+	return ValidateTravelDetails(input.Destination, input.TravellerCount, input.TravelStart, input.TravelEnd)
+}
+
+// ValidateTravelDetails applies the enquiry's trip-field rules independently of
+// contacts or an action timestamp.
+func ValidateTravelDetails(destination string, travellerCount int, start, end string) error {
+	if !validText(destination, 200) || travellerCount < 1 || travellerCount > 99 || !validTravelDates(start, end) {
 		return ErrInvalidInput
 	}
 	return nil

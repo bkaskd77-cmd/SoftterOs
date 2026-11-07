@@ -101,7 +101,11 @@ func advance(ctx context.Context, tx pgx.Tx, e storedEvent) error {
 	if err != nil {
 		return err
 	}
-	_, err = tx.Exec(ctx, `UPDATE softteros_enquiries.enquiries SET state=$3,version=$4,
+	return advanceWithGrant(ctx, tx, e)
+}
+
+func advanceWithGrant(ctx context.Context, tx pgx.Tx, e storedEvent) error {
+	_, err := tx.Exec(ctx, `UPDATE softteros_enquiries.enquiries SET state=$3,version=$4,
  assignee_membership_id=$5,last_changed_at=$6 WHERE organization_id=$1 AND enquiry_id=$2`,
 		e.OrganizationID, e.EnquiryID, e.NewState, e.Version, e.Assignee, e.At)
 	if err != nil {

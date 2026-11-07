@@ -189,14 +189,21 @@ GRANT CONNECT ON DATABASE :"target" TO :"owner_role", :"runtime_role", :"writer_
 REVOKE ALL ON SCHEMA public FROM PUBLIC;
 SQL
     for migration in "$repo"/db/migrations/*.sql; do
+        migration_input=$migration
+        if test "$db" = "$db_b" && test "$(basename "$migration")" = "004_assigned_enquiry_read.sql"; then
+            migration_input="$repo/db/tests/assigned_read_upgrade.sql"
+        fi
         psql_admin -d "$db" -v owner_role="$owner_role" -v runtime_role="$runtime_role" \
             -v writer_role="$writer_role" -v lock_role="$lock_role" \
-            -f "$migration" >"$logdir/$db-$(basename "$migration").log" 2>&1
+            -f "$migration_input" >"$logdir/$db-$(basename "$migration").log" 2>&1
+        if test "$migration_input" != "$migration"; then
+            echo "PASS baseline upgrade preserves entitlements, RLS and privileges: $db"
+        fi
     done
     psql_admin -d "$db" -v owner_role="$owner_role" -v runtime_role="$runtime_role" \
         -v writer_role="$writer_role" -v lock_role="$lock_role" \
         -f "$repo/db/tests/integration.sql" >"$logdir/$db-tests.log" 2>&1
-    echo "PASS fresh database migrations and SQL assertions: $db"
+    echo "PASS database migrations and SQL assertions: $db"
     for kind in missing_event missing_receipt pending_receipt; do
         pending=false
         missing=false

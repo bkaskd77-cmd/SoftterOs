@@ -95,6 +95,10 @@ INSERT INTO softteros_access.actor_authority_fences VALUES ('actor-2',1);
 INSERT INTO softteros_access.memberships VALUES ('org-1','member-3','actor-2',true,false,'2000-01-01+00','9999-01-01+00');
 INSERT INTO softteros_access.membership_enquiry_capabilities
  SELECT 'org-1','member-3',cap FROM unnest(ARRAY['enquiries.create','enquiries.review','enquiries.qualify']) cap;
+INSERT INTO softteros_access.membership_enquiry_capabilities VALUES ('org-1','member-3','enquiries.read');
+SELECT pg_temp.expect_error($q$INSERT INTO softteros_access.membership_enquiry_capabilities
+ VALUES ('org-1','member-3','enquiries.unsupported')$q$,'23514','unsupported entitlement',
+ 'membership_enquiry_capabilities_capability_check');
 -- Missing-fence positive identity anchors for a focused helper denial.
 SELECT set_config('softteros.actor_id','actor-3',true);
 INSERT INTO softteros_access.actors VALUES ('actor-3');

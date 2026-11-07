@@ -3,6 +3,7 @@ package postgres
 import (
 	"context"
 	"errors"
+	"time"
 
 	"github.com/bkasdk77-cmd/SoftterOs/internal/platform/authz"
 	pg "github.com/bkasdk77-cmd/SoftterOs/internal/platform/postgres"
@@ -40,11 +41,11 @@ type CreationIdentity interface {
 }
 
 type CreationChecker struct {
-	db       creationTransactions
+	db       scopedTransactions
 	identity CreationIdentity
 }
 
-type creationTransactions interface {
+type scopedTransactions interface {
 	WithTx(context.Context, pg.Scope, func(context.Context, pg.Executor) error) error
 }
 
@@ -97,8 +98,8 @@ type creationFacts struct {
 }
 
 func (c *CreationChecker) acquire(ctx context.Context, tx pg.Executor, r CreationRequest) (*creationFacts, error) {
-	var actorRevision, organizationRevision int64
-	if err := tx.QueryRow(ctx, creationFenceSQL, r.ActorID, r.OrganizationID).Scan(&actorRevision, &organizationRevision); err != nil {
+	actorRevision, organizationRevision, err := lockAuthority(ctx, tx, r.ActorID, r.OrganizationID)
+	if err != nil {
 		var server *pgconn.PgError
 		if errors.As(err, &server) && server.Code == "42501" {
 			return nil, authz.ErrUnauthorized
@@ -115,29 +116,15 @@ func (c *CreationChecker) acquire(ctx context.Context, tx pg.Executor, r Creatio
 	if identity.RequestID != r.RequestID || identity.Actor.ID != r.ActorID || !identity.Actor.Authenticated {
 		return nil, authz.ErrUnauthorized
 	}
-	var actor, organization string
-	var member authz.Membership
-	var from, until pgtype.Timestamptz
-	var canCreate bool
-	err = tx.QueryRow(ctx, creationFactsSQL, r.ActorID, r.OrganizationID, r.MembershipID, string(authz.CapabilityCreateEnquiry)).Scan(
-		&actor, &organization, &member.ID, &member.ActorID, &member.OrganizationID,
-		&member.Active, &member.Revoked, &from, &until, &canCreate)
-	if errors.Is(err, pgx.ErrNoRows) {
-		return nil, authz.ErrUnauthorized
+	member, err := currentMembership(ctx, tx, r.ActorID, r.OrganizationID, r.MembershipID, authz.CapabilityCreateEnquiry)
+	if err == authz.ErrUnauthorized {
+		return nil, err
 	}
-	if err != nil || !instant(from) || !instant(until) {
+	if err != nil {
 		return nil, creationUnavailable(ctx)
 	}
-	if actor != r.ActorID || organization != r.OrganizationID || member.ID != r.MembershipID ||
-		member.ActorID != r.ActorID || member.OrganizationID != r.OrganizationID {
-		return nil, authz.ErrUnauthorized
-	}
-	member.ValidFrom, member.ValidUntil = from.Time.UTC(), until.Time.UTC()
-	if canCreate {
-		member.Capabilities = []authz.Capability{authz.CapabilityCreateEnquiry}
-	}
 	facts := &creationFacts{
-		policy:        authz.NewContext(authz.ContextInput{Actor: identity.Actor, ActiveOrganizationID: organization, Membership: member}),
+		policy:        authz.NewContext(authz.ContextInput{Actor: identity.Actor, ActiveOrganizationID: r.OrganizationID, Membership: member}),
 		actorRevision: actorRevision, organizationRevision: organizationRevision,
 	}
 	if err := facts.refresh(ctx, tx); err != nil {
@@ -146,19 +133,60 @@ func (c *CreationChecker) acquire(ctx context.Context, tx pg.Executor, r Creatio
 	return facts, nil
 }
 
+func lockAuthority(ctx context.Context, tx pg.Executor, actorID, organizationID string) (int64, int64, error) {
+	var actorRevision, organizationRevision int64
+	err := tx.QueryRow(ctx, creationFenceSQL, actorID, organizationID).Scan(&actorRevision, &organizationRevision)
+	return actorRevision, organizationRevision, err
+}
+
+// Call only after acquiring the authority fences. This loads the exact
+// effective entitlement and verifies the bindings independently of RLS.
+func currentMembership(ctx context.Context, tx pg.Executor, actorID, organizationID, membershipID string, capability authz.Capability) (authz.Membership, error) {
+	var actor, organization string
+	var member authz.Membership
+	var from, until pgtype.Timestamptz
+	var entitled bool
+	err := tx.QueryRow(ctx, creationFactsSQL, actorID, organizationID, membershipID, string(capability)).Scan(
+		&actor, &organization, &member.ID, &member.ActorID, &member.OrganizationID,
+		&member.Active, &member.Revoked, &from, &until, &entitled)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return authz.Membership{}, authz.ErrUnauthorized
+	}
+	if err != nil || !instant(from) || !instant(until) {
+		return authz.Membership{}, errors.Join(ErrStorage, ctx.Err())
+	}
+	if actor != actorID || organization != organizationID || member.ID != membershipID ||
+		member.ActorID != actorID || member.OrganizationID != organizationID {
+		return authz.Membership{}, authz.ErrUnauthorized
+	}
+	member.ValidFrom, member.ValidUntil = from.Time.UTC(), until.Time.UTC()
+	if entitled {
+		member.Capabilities = []authz.Capability{capability}
+	}
+	return member, nil
+}
+
 // refresh checks locked facts with fresh server time. A final call must follow
 // all deferred integrity work; no check promises validity at a future commit instant.
 func (f *creationFacts) refresh(ctx context.Context, tx pg.Executor) error {
-	var at pgtype.Timestamptz
-	if err := tx.QueryRow(ctx, creationClockSQL).Scan(&at); err != nil || !instant(at) ||
-		(f.authorization.Valid() && at.Time.Before(f.authorization.AuthorizedAt())) {
+	at, err := authorityTime(ctx, tx, f.authorization.AuthorizedAt())
+	if err != nil {
 		return creationUnavailable(ctx)
 	}
-	authorization, err := f.policy.AuthorizeEnquiryCreation(at.Time)
+	authorization, err := f.policy.AuthorizeEnquiryCreation(at)
 	if err == nil {
 		f.authorization = authorization
 	}
 	return err
+}
+
+func authorityTime(ctx context.Context, tx pg.Executor, previous time.Time) (time.Time, error) {
+	var at pgtype.Timestamptz
+	if err := tx.QueryRow(ctx, creationClockSQL).Scan(&at); err != nil || !instant(at) ||
+		(!previous.IsZero() && at.Time.Before(previous)) {
+		return time.Time{}, errors.Join(ErrStorage, ctx.Err())
+	}
+	return at.Time.UTC(), nil
 }
 
 func creationUnavailable(ctx context.Context) error {

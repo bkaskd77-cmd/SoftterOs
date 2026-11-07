@@ -450,7 +450,7 @@ func TestIntegrationFirstCreationRevocationFirst(t *testing.T) {
 
 // Test-only writer: exclusive actor then organization fences and revision updates,
 // bounded connection settings plus a whole operation deadline. No production API.
-func revokeAfterFences(ctx context.Context, conn *pgx.Conn, f *persistentFixture) error {
+func revokeAfterFences(ctx context.Context, conn *pgx.Conn, f *persistentFixture, capability authz.Capability) error {
 	tx, err := conn.Begin(ctx)
 	if err != nil {
 		return err
@@ -471,7 +471,7 @@ func revokeAfterFences(ctx context.Context, conn *pgx.Conn, f *persistentFixture
 		{"SELECT organization_id FROM softteros_access.organization_authority_fences WHERE organization_id=$1 FOR UPDATE", []any{f.r.OrganizationID}},
 		{"UPDATE softteros_access.actor_authority_fences SET revision=revision+1 WHERE actor_id=$1", []any{f.r.ActorID}},
 		{"UPDATE softteros_access.organization_authority_fences SET revision=revision+1 WHERE organization_id=$1", []any{f.r.OrganizationID}},
-		{"DELETE FROM softteros_access.membership_enquiry_capabilities WHERE organization_id=$1 AND membership_id=$2", []any{f.r.OrganizationID, f.r.MembershipID}},
+		{"DELETE FROM softteros_access.membership_enquiry_capabilities WHERE organization_id=$1 AND membership_id=$2 AND capability=$3", []any{f.r.OrganizationID, f.r.MembershipID, capability}},
 	} {
 		if _, err = tx.Exec(ctx, q.sql, q.args...); err != nil {
 			return err
@@ -519,7 +519,7 @@ func TestIntegrationFirstCreationBusinessFirst(t *testing.T) {
 				t.Fatal(err)
 			}
 			writerDone := make(chan error, 1)
-			go func() { writerDone <- revokeAfterFences(ctx, writer, f) }()
+			go func() { writerDone <- revokeAfterFences(ctx, writer, f, authz.CapabilityCreateEnquiry) }()
 			waitAuthorityLock(t, f.admin, pid)
 			select {
 			case err := <-writerDone:

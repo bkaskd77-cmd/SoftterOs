@@ -6,6 +6,11 @@ authorized [first-attempt creation writer](FIRST_CREATION.md) and its [internal
 receipt recovery](FIRST_CREATION.md#read-only-receipt-recovery) share this package.
 Other workflow writes and transport integration remain deferred.
 
+For current assigned business data, use the separately authorized
+[`AssignedReader.GetEnquiry` contract](../../../../docs/ENQUIRY_TO_DRAFT_ITINERARY_WORKFLOW.md#assigned-enquiry-read).
+That operation uses its own narrow trip projection under the authority fences
+and a shared enquiry row lock.
+
 Call `Load(ctx, tx, organizationID, enquiryID)` **inside** the existing
 [`postgres.DB.WithTx`](../../../platform/postgres/README.md) callback, using that
 callback's context and Executor. The transaction owner retains completion and
