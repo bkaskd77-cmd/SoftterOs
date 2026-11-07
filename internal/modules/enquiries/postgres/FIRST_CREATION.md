@@ -114,12 +114,30 @@ result classification, not a real lost network acknowledgement. Real database
 tests establish committed round trips, uniqueness contention and rollback of all
 three records after injected failures, cancellation or expiry. Recovery tests use
 the same fixture key as creation and real PostgreSQL for visibility before commit,
-after commit and after rollback. The lost-acknowledgement fixture substitutes an
-unknown outcome after an actual successful commit. It does not simulate a network
-transport or exercise a real connection loss.
+after commit and after rollback. The historical-acknowledgement fixture
+substitutes an unknown outcome after a successful commit for its ordering tests.
+
+The separate `TestIntegrationCreationCommitTransport` fixture uses a private
+Unix-socket proxy with the real pgx pool and transaction boundary. A normal
+control relays the successful reply. In the reply-loss case, the proxy forwards
+COMMIT, observes PostgreSQL's COMMIT `CommandComplete` and idle `ReadyForQuery`,
+and holds the complete reply while an independent connection verifies the
+committed records. It closes the socket with the reply still withheld. The
+request-loss control holds the COMMIT query while the backend has an open transaction,
+then disconnects without forwarding it. Both disconnects give the caller an
+unknown outcome. The independent observer verifies rollback for request loss,
+and the original key recovers a historical acknowledgement only for the
+committed cases. The same pool opens a replacement backend after either fault.
+The test checks that the exact proxy sessions and their locks are gone.
+
+The proxy handles bounded, fragmented frames for the pinned driver's serial
+test traffic and closes its out-of-band cleanup cancellations locally. This is
+controlled local transport-failure coverage with synthetic authority and data.
+TCP/TLS failure behavior, failover and production networks remain outside this
+coverage. [PostgreSQL protocol messages](https://www.postgresql.org/docs/18/protocol-message-formats.html)
 
 No schema, migration, domain policy, transaction infrastructure, lifecycle helper
 or dependency change is part of this slice. Review/qualification persistence,
 production authority writers/identity, production key storage/rotation, receipt
-retention, real acknowledgement-loss testing, real-data safeguards, HTTP/UI and
+retention, production-network validation, real-data safeguards, HTTP/UI and
 deployment remain deferred.
