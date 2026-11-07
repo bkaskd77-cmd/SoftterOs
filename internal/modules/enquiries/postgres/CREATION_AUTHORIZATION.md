@@ -38,6 +38,13 @@ must finish all such work before its final expiry check and retain the original
 action instant. The check cannot promise validity at an unknowable future commit
 or response-delivery instant.
 
+The separately authorized [first-attempt writer](FIRST_CREATION.md) now calls the
+same private fence/fact acquisition path inside its own single transaction. Its
+private facts remain transaction-bound, with fresh checks after reservation waits
+and after executing deferred integrity checks. It never calls standalone Check
+to authorize a different transaction. Standalone Check retains its original
+preflight/final checks and returns no reusable facts.
+
 ## Existing-schema semantics and trust
 
 Actors and organizations are existence anchors. Actor enablement/revocation

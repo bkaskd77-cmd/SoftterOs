@@ -10,6 +10,8 @@
 
 ## Status, baseline, and scope
 
+**Bounded first-attempt creation status:** The [internal writer](../internal/modules/enquiries/postgres/FIRST_CREATION.md) implements manual creation in one fenced transaction using the approved version-1 fingerprint contract below. Only this synthetic-data slice is authorized; replay/recovery, production identity/key management, real data and other workflow writes remain deferred.
+
 This document proposes storage for only manual enquiry creation, starting review, and qualification. It does not approve implementation, dependencies, database installation, credentials, or a change to business policy. The reviewed baseline is `ed24609a8f57158ea7d7eeb590a5005ce4a94081` (`test: close enquiry authorization audit gaps`). At design start, local `main` and `origin/main` were synchronized and the working tree was clean; origin was `https://github.com/bkaskd77-cmd/SoftterOs.git`.
 
 The [workflow](ENQUIRY_TO_DRAFT_ITINERARY_WORKFLOW.md), [tenancy model](TENANCY_AND_ACCESS_MODEL.md), [security guardrails](SECURITY_AND_AI_GUARDRAILS.md), [blueprint](PROJECT_BLUEPRINT.md), and [repository instructions](../AGENTS.md) remain authoritative. Existing Go business operations remain in-memory only; the separately authorized domain snapshot preparation is described below. Persistence Step 1 separately authorizes the [SQL-only foundation and disposable local tests](../db/README.md): tables, permissions/RLS, structural history/receipt checks and the fence-lock helper. The broader design remains PROPOSED; no Go adapter, dependency exception, application transaction coordinator, external authorization integration, or production operation is implemented or approved by that slice.
@@ -123,6 +125,65 @@ Proposed ordering for a new command:
 9. Commit, then return success. Do not emit an external success event or publish the candidate result before commit. A failed or ambiguous commit returns no claimed success; reconcile as below. Require durable PostgreSQL tables and normal synchronous commit/WAL durability settings for any durability claim, not unlogged tables or asynchronous acknowledgement. This does not promise backup, failover, or disaster recovery. [PostgreSQL asynchronous commit tradeoff](https://www.postgresql.org/docs/18/wal-async-commit.html)
 
 ## Concurrency, duplicate requests, retries, and errors
+
+### Approved first-attempt creation fingerprint contract
+
+The following version-1 contract is approved only for the bounded synthetic-data
+manual-creation milestone. It supersedes the fingerprint approval gate below for
+this slice; replay, recovery, production key management and real-data operation
+remain deferred.
+
+Use standard-library HMAC-SHA-256 with an explicitly injected, exactly 32-byte
+secret and store the complete 32-byte result. Reject missing or incorrectly sized
+keys. Runtime code neither generates a key nor supplies a default. Never log the
+key or canonical payload. Integration fixtures generate ephemeral random keys
+and retain each fixture's key across attempts; fixed public keys are test vectors
+only. Fingerprint version identifies the encoding, not a key version. Do not
+silently change this version-1 encoding. Production key storage, rotation and
+verification of retained receipts require a later contract.
+
+Encode these fields in exactly this order. Prefix **every** field, including the
+tag and literals, with its unsigned four-byte big-endian UTF-8 **byte** length:
+
+1. Literal `softteros.enquiry.create.fingerprint.v1`.
+2. Verified owning/active organization ID.
+3. Verified actor ID.
+4. Verified membership ID.
+5. Scoped receipt request key.
+6. Literal command `enquiry.created`.
+7. Literal expected version `0`.
+8. Validated contact name.
+9. Validated contact email.
+10. Validated destination.
+11. Traveller count in decimal ASCII, without a sign or leading zeros.
+12. Travel start.
+13. Travel end.
+
+Reject invalid UTF-8 and any field length exceeding 2^32-1; never replace or
+truncate. Use the exact validated values persisted in the enquiry: no extra
+trimming, case folding or Unicode normalization. Present dates are exact
+`YYYY-MM-DD` calendar strings (years 0001–9999), without timezone conversion;
+absent dates are empty strings. All six caller-controlled enquiry input fields
+are covered. Generated enquiry/event IDs, all timestamps and per-attempt identity
+attestation request IDs are excluded. The receipt key is distinct from that
+attestation request ID.
+
+Duplicate prevention uses the existing `(organization_id, membership_id,
+request_key)` uniqueness constraint, never fingerprint uniqueness. Reserve the
+key only after current authorization and input validation; after any reservation
+wait, refresh action-time authorization before generating IDs or creating the
+domain value. Any already committed scoped key is rejected, even for identical
+input: return no stored result and do not replay, overwrite or recover it. A
+competing uncommitted reservation may block within the existing finite deadlines;
+if its transaction rolls back, a waiting fully authorized attempt may become the
+first committed creation. No automatic retry is performed. A fingerprint proves
+neither authentication nor authorization.
+
+Creation, its event and completed receipt must commit together. Execute deferred
+integrity checks before the final fresh expiry check, preserve the original
+action instant and return a candidate only after confirmed commit. Preserve
+confirmed rollback, cleanup failure and unknown-commit distinctions; an uncertain
+outcome must not be retried automatically or represented as successful creation.
 
 Two authorized reviewers can concurrently claim the same `New` enquiry, but only one may commit version 2 and self-assignment. The loser observes the committed version/state after waiting and fails; its receipt reservation and candidate event roll back. A lock timeout must not skip the row or choose an alternative assignee. Qualification rechecks the exact stored membership, not merely the same actor or a different membership belonging to that person. Stale expected versions are never refreshed automatically. A new request repeating an already completed transition remains invalid.
 

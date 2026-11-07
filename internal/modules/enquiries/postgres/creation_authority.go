@@ -80,23 +80,40 @@ func validCreationRequest(r CreationRequest) bool {
 // authorize is private to the adapter. All facts/proofs remain on this stack;
 // callers cannot retain a creation proof across transactions or requests.
 func (c *CreationChecker) authorize(ctx context.Context, tx pg.Executor, r CreationRequest) error {
+	facts, err := c.acquire(ctx, tx, r)
+	if err != nil {
+		return err
+	}
+	return facts.refresh(ctx, tx)
+}
+
+// creationFacts never leaves its owning transaction. The creation writer uses
+// this same acquisition path, then refreshes after waits and after integrity
+// checks. Neither this value nor its authorization is a reusable public token.
+type creationFacts struct {
+	policy                              authz.Context
+	authorization                       authz.CreationAuthorization
+	actorRevision, organizationRevision int64
+}
+
+func (c *CreationChecker) acquire(ctx context.Context, tx pg.Executor, r CreationRequest) (*creationFacts, error) {
 	var actorRevision, organizationRevision int64
 	if err := tx.QueryRow(ctx, creationFenceSQL, r.ActorID, r.OrganizationID).Scan(&actorRevision, &organizationRevision); err != nil {
 		var server *pgconn.PgError
 		if errors.As(err, &server) && server.Code == "42501" {
-			return authz.ErrUnauthorized
+			return nil, authz.ErrUnauthorized
 		}
-		return creationUnavailable(ctx)
+		return nil, creationUnavailable(ctx)
 	}
 	if actorRevision <= 0 || organizationRevision <= 0 {
-		return ErrCreationUnavailable
+		return nil, ErrCreationUnavailable
 	}
 	identity, err := c.identity.CurrentCreation(ctx, CreationIdentityRequest{ActorID: r.ActorID, RequestID: r.RequestID})
 	if err != nil {
-		return creationUnavailable(ctx)
+		return nil, creationUnavailable(ctx)
 	}
 	if identity.RequestID != r.RequestID || identity.Actor.ID != r.ActorID || !identity.Actor.Authenticated {
-		return authz.ErrUnauthorized
+		return nil, authz.ErrUnauthorized
 	}
 	var actor, organization string
 	var member authz.Membership
@@ -106,35 +123,41 @@ func (c *CreationChecker) authorize(ctx context.Context, tx pg.Executor, r Creat
 		&actor, &organization, &member.ID, &member.ActorID, &member.OrganizationID,
 		&member.Active, &member.Revoked, &from, &until, &canCreate)
 	if errors.Is(err, pgx.ErrNoRows) {
-		return authz.ErrUnauthorized
+		return nil, authz.ErrUnauthorized
 	}
 	if err != nil || !instant(from) || !instant(until) {
-		return creationUnavailable(ctx)
+		return nil, creationUnavailable(ctx)
 	}
 	if actor != r.ActorID || organization != r.OrganizationID || member.ID != r.MembershipID ||
 		member.ActorID != r.ActorID || member.OrganizationID != r.OrganizationID {
-		return authz.ErrUnauthorized
+		return nil, authz.ErrUnauthorized
 	}
 	member.ValidFrom, member.ValidUntil = from.Time.UTC(), until.Time.UTC()
 	if canCreate {
 		member.Capabilities = []authz.Capability{authz.CapabilityCreateEnquiry}
 	}
-	policy := authz.NewContext(authz.ContextInput{Actor: identity.Actor, ActiveOrganizationID: organization, Membership: member})
-	var actionAt pgtype.Timestamptz
-	if err := tx.QueryRow(ctx, creationClockSQL).Scan(&actionAt); err != nil || !instant(actionAt) {
+	facts := &creationFacts{
+		policy:        authz.NewContext(authz.ContextInput{Actor: identity.Actor, ActiveOrganizationID: organization, Membership: member}),
+		actorRevision: actorRevision, organizationRevision: organizationRevision,
+	}
+	if err := facts.refresh(ctx, tx); err != nil {
+		return nil, err
+	}
+	return facts, nil
+}
+
+// refresh checks locked facts with fresh server time. A final call must follow
+// all deferred integrity work; no check promises validity at a future commit instant.
+func (f *creationFacts) refresh(ctx context.Context, tx pg.Executor) error {
+	var at pgtype.Timestamptz
+	if err := tx.QueryRow(ctx, creationClockSQL).Scan(&at); err != nil || !instant(at) ||
+		(f.authorization.Valid() && at.Time.Before(f.authorization.AuthorizedAt())) {
 		return creationUnavailable(ctx)
 	}
-	if _, err := policy.AuthorizeEnquiryCreation(actionAt.Time); err != nil {
-		return err
+	authorization, err := f.policy.AuthorizeEnquiryCreation(at.Time)
+	if err == nil {
+		f.authorization = authorization
 	}
-	// No writes/deferred integrity work exist in this slice. A future write
-	// coordinator must finish that work before this final validity recheck.
-	// This does not promise authorization at an unknowable future commit instant.
-	var finalAt pgtype.Timestamptz
-	if err := tx.QueryRow(ctx, creationClockSQL).Scan(&finalAt); err != nil || !instant(finalAt) || finalAt.Time.Before(actionAt.Time) {
-		return creationUnavailable(ctx)
-	}
-	_, err = policy.AuthorizeEnquiryCreation(finalAt.Time)
 	return err
 }
 
