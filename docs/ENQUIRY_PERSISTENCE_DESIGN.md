@@ -10,7 +10,9 @@
 
 ## Status, baseline, and scope
 
-**Bounded manual creation status:** The [internal writer](../internal/modules/enquiries/postgres/FIRST_CREATION.md) implements manual creation in one fenced transaction using the approved version-1 fingerprint contract below. [Internal receipt recovery](../internal/modules/enquiries/postgres/FIRST_CREATION.md#read-only-receipt-recovery) can separately acknowledge an earlier committed manual creation under fresh creation authority. Both slices are for synthetic data. Production identity/key management, real data and other workflow writes remain deferred.
+**Bounded manual creation status:** The [internal writer](../internal/modules/enquiries/postgres/FIRST_CREATION.md) implements manual creation in one fenced transaction using the approved version-1 fingerprint contract below. [Internal receipt recovery](../internal/modules/enquiries/postgres/FIRST_CREATION.md#read-only-receipt-recovery) can separately acknowledge an earlier committed manual creation under fresh creation authority. Both slices are for synthetic data.
+
+**Bounded start-review status:** The [internal review starter](../internal/modules/enquiries/postgres/start_review.go) persists first-attempt self-assignment for synthetic data using the [approved start-review contract](#approved-first-attempt-start-review-contract). Qualification persistence, production identity and key management, and real data remain deferred.
 
 This document proposes storage for only manual enquiry creation, starting review, and qualification. It does not approve implementation, dependencies, database installation, credentials, or a change to business policy. The reviewed baseline is `ed24609a8f57158ea7d7eeb590a5005ce4a94081` (`test: close enquiry authorization audit gaps`). At design start, local `main` and `origin/main` were synchronized and the working tree was clean; origin was `https://github.com/bkaskd77-cmd/SoftterOs.git`.
 
@@ -184,6 +186,54 @@ action instant and return a candidate only after confirmed commit. Preserve
 confirmed rollback, cleanup failure and unknown-commit distinctions; an uncertain
 outcome must not be retried automatically or represented as successful creation.
 
+### Approved first-attempt start-review contract
+
+`ReviewStarter.StartReview` accepts the trusted actor and per-attempt request ID,
+selected organization and membership, enquiry ID, expected version 1, and the
+separate receipt key. The existing Go policy requires an attested human, current
+membership and the exact `enquiries.review` entitlement. Resolve exactly one
+active, unrevoked grant for the same organization, actor, membership, enquiry
+and capability at current database time. Zero or multiple eligible grants deny
+the command. Out-of-window, inactive, revoked and
+nonmatching grants are excluded from the eligible set. Synthetic fixtures
+represent pre-resolved purpose and field restrictions.
+
+Use HMAC-SHA-256 with a dedicated, explicitly injected 32-byte review key and
+store the full raw 32-byte MAC with `fingerprint_version = 1`. Frame every exact
+UTF-8 field with its unsigned four-byte big-endian byte length. Reject invalid
+UTF-8 or length overflow. Encode these fields in order.
+
+1. Literal `softteros.enquiry.start_review.fingerprint.v1`.
+2. Verified owning organization ID.
+3. Attested actor ID.
+4. Verified membership ID.
+5. Request key.
+6. Literal `enquiry.review_started`.
+7. Grant-bound enquiry ID.
+8. ASCII `1`.
+
+Grant ID, authority revisions, per-attempt request ID, generated event ID,
+timestamps and derived assignment are excluded. Record the actual grant and
+revisions in the immutable event. The creation encoding is a separate contract.
+
+Hold the shared actor then organization fences through completion. Reserve the
+tenant/member/request key and bind the target before acquiring the enquiry row
+lock. The reservation checks its membership binding and has no direct enquiry
+foreign key. Both directions of the receipt–event binding are deferred. The
+enquiry uses `FOR NO KEY UPDATE` to serialize claims, conflict with assigned
+readers' `FOR SHARE`, and coexist with foreign-key key-share locks. Refresh
+authorization after waits and use the same uniquely eligible grant through the
+final expiry check.
+
+The domain supplies the assignment, state, version and action time for the
+conditional update and immutable event. Complete the matching receipt, run
+`SET CONSTRAINTS ALL IMMEDIATE`, and recheck authority with fresh time before
+commit. Only acknowledged commit returns the organization, enquiry and event
+IDs, resulting state/version, assignee membership and action time. A used key
+returns a duplicate error and no receipt data. Every error leaves the
+acknowledgement empty. An unknown commit remains unresolved and review recovery
+and automatic retries are outside this slice. Review adds no read entitlement.
+
 Two authorized reviewers can concurrently claim the same `New` enquiry, but only one may commit version 2 and self-assignment. The loser observes the committed version/state after waiting and fails; its receipt reservation and candidate event roll back. A lock timeout must not skip the row or choose an alternative assignee. Qualification rechecks the exact stored membership, not merely the same actor or a different membership belonging to that person. Stale expected versions are never refreshed automatically. A new request repeating an already completed transition remains invalid.
 
 **Approved internal creation recovery:** A caller with fresh attestation and current `enquiries.create` authority through the original actor, organization and membership may recover only the historical acknowledgement for a matching manual creation. Use the original request key and exact creation input, the same configured key used for the version-1 MAC, and a separately attested request ID. Under the same authority fences, read and verify the eligible receipt and its immutable creation bindings in one statement, compare its stored MAC in constant time, and recheck validity before releasing receipt information. The acknowledgement contains the tenant, enquiry and event IDs, original action, resulting version and action instant. A receipt that is not visible leaves completion unconfirmed. This path performs no record writes and never retries the original command. See the [bounded recovery contract](../internal/modules/enquiries/postgres/FIRST_CREATION.md#read-only-receipt-recovery).
@@ -253,7 +303,7 @@ Beyond the explicitly authorized SQL-only Step 1 experiment, recommendations rem
 | Keys and representation | Step 1 tests composite tenant keys, closed schema states/versions and microsecond SQL storage. Generated application IDs and the future adapter's pre-binding precision contract still need approval. Rejecting unsupported storage precision narrows accepted storage facts, not domain values. |
 | Authority experiment | Step 1 tests synthetic authority rows, revisions and the limited lock helper. Future coordinator/identity integration and cooperating-writer revocation ordering remain separate decisions; these SQL fixtures do not implement policy derivation or freshness. |
 | In-flight authorization and expiry | Approve command-before-revocation ordering under locks and the final conservative expiry check. If revocation must cancel already in-flight operations or validity must hold at a different ordering point, resolve that requirement before coding. |
-| Duplicate/commit recovery | The version-1 keyed fingerprint and minimal acknowledgement under fresh authority are approved for internal synthetic manual creation only. Other command recovery, user-facing access, production keys and receipt lifetime require separate approval. Unresolved completion must never trigger an automatic retry. |
+| Duplicate/commit recovery | First-attempt receipts and command-specific version-1 fingerprints are approved for internal synthetic creation and start-review. Only manual creation has approved recovery under fresh authority. Other recovery, user-facing access, production keys and receipt lifetime require separate approval. Unresolved completion must never trigger an automatic retry. |
 
 Before accepting **untrusted requests**, separately approve and implement verified identity/session construction, authoritative policy/operational-capability and grant derivation/administration, coordinated revocation/freshness contract, server-side request/response and field controls, command-recovery authorization, scoped reads, bounded resource use, and safe denial telemetry. Synthetic fixtures cannot substitute for these. The existing human-only transition rule and AI prohibition remain mandatory; no AI integration is implied.
 

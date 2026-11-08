@@ -4,7 +4,7 @@
 
 This workflow starts with manual enquiry capture and ends with an internally approved draft itinerary. It excludes quotation, publication, reservations, supplier confirmation, and payment processing. Passport and medical-data collection are outside the workflow.
 
-Manual enquiry creation and the in-memory `New` → `Under review` → `Qualified` transitions, including review self-assignment, are implemented. Other transitions, drafting, reassignment, revisions and approval below remain specifications for future bounded work. There is no HTTP interface, workflow write adapter, integrated durable audit log, frontend, AI integration, or traveller delivery mechanism. The separately authorized [internal enquiry loader](../internal/modules/enquiries/postgres/README.md) reconstructs historical values without providing business read authorization.
+Manual enquiry creation and the in-memory `New` → `Under review` → `Qualified` transitions, including review self-assignment, are implemented. The internal PostgreSQL adapters persist manual creation and starting review for synthetic data. Other transitions, drafting, reassignment, revisions and approval below remain specifications for future bounded work. HTTP, frontend, AI integration and traveller delivery remain separate. The [internal enquiry loader](../internal/modules/enquiries/postgres/README.md) reconstructs historical values without providing business read authorization.
 
 **Persistence boundary:** [Enquiry persistence design](ENQUIRY_PERSISTENCE_DESIGN.md) describes storage for these three operations. Its SQL-only local test slice is implemented as documented there; the broader design remains proposed and does not change this workflow's approved policies or authorize further database work.
 
@@ -38,7 +38,7 @@ Closing outcomes may be archived; `Draft ready` may be archived after its associ
 
 ### Review and qualification authorization
 
-The following approved rules are implemented as immutable in-memory results. State, assignment and audit facts are returned together; future persistence must atomically check stored versions and commit that outcome with fresh authorization. There is no shared authoritative store or durable audit sink yet.
+The following approved rules produce immutable domain results with state, assignment and audit facts together. The synthetic PostgreSQL start-review path checks the stored version and commits its outcome with fresh authorization. Qualification persistence remains deferred.
 
 | Operation | Required canonical capability | Transition | Assignment rule |
 | --- | --- | --- | --- |
@@ -60,9 +60,9 @@ Deny the operation when any required condition fails, including:
 - Cross-organization actor/membership, active-organization, grant, or enquiry ownership mismatches.
 - Reassignment, supervisor override, delegation, or bulk transitions; all remain deferred and unavailable by default. AI cannot start review, assign an enquiry, qualify it, or approve a transition.
 
-Validate authorization, current state, assignment, and expected version before mutation. Starting review must commit the assignment and state change together; qualification must preserve the assignee. Each successful operation requires attributable audit information recording the authoritative organization and active organization, enquiry identifier, previous and new states, actor, acting membership, authorization grant basis, exact capability, previous and resulting assignee, and authoritative timestamp. State, assignment, and success audit evidence form one atomic outcome. A denied or failed operation leaves the enquiry, assignment, and existing audit facts unchanged and produces no success event. Safe denial audit records are distinct from success events and must not expose sensitive values.
+Validate authorization, current state, assignment, and expected version before mutation. Starting review must commit the assignment and state change together; qualification must preserve the assignee. Each successful operation requires attributable audit information recording the authoritative organization and active organization, enquiry identifier, previous and new states, actor, acting membership, authorization grant basis, exact capability, previous and resulting assignee, and authoritative timestamp. State, assignment, and success audit evidence form one atomic outcome. A denial or confirmed rollback leaves the enquiry, assignment, and existing audit facts unchanged and produces no success event. Safe denial audit records are distinct from success events and must not expose sensitive values.
 
-The implementation uses a minimal in-memory expected-version counter for these two transitions. Persistent version comparison, transaction representation and durable audit implementation remain deferred; future persistence must check the stored version and current authority atomically with state and audit writes. Returning in-memory audit facts alone is not a durable audit record.
+The [internal first-attempt start-review contract](ENQUIRY_PERSISTENCE_DESIGN.md#approved-first-attempt-start-review-contract) requires exactly one currently eligible direct review grant. It commits self-assignment, version 2, the immutable success event and its completed receipt in one transaction. Self-assignment conveys no `enquiries.read` entitlement. Review recovery and qualification persistence remain separate.
 
 ### Assigned enquiry read
 
@@ -98,7 +98,7 @@ no persistent business writes or success-event or receipt writes.
 The approved slice uses synthetic identities and entitlements in the disposable
 PostgreSQL harness. The forward migration only permits the new entitlement value.
 It assigns that authority to no membership. Unassigned intake reads, persistent
-start-review, production identity and entitlement administration, HTTP and UI
+qualification, production identity and entitlement administration, HTTP and UI
 remain separate work.
 
 ## Itinerary lifecycle and versions
