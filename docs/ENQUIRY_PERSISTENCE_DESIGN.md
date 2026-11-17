@@ -234,6 +234,75 @@ returns a duplicate error and no receipt data. Every error leaves the
 acknowledgement empty. An unknown commit remains unresolved and review recovery
 and automatic retries are outside this slice. Review adds no read entitlement.
 
+### Approved internal start-review acknowledgement recovery
+
+The separately authorized `ReviewStarter.Recover(ctx, request, enquiryID,
+expectedVersion, originalRequestKey)` performs read-only historical recovery for
+synthetic internal use. Supply expected version 1, the original enquiry/key, and
+a fresh trusted actor/request binding. Reuse the same explicitly configured
+32-byte review key and unchanged review-v1 encoding. No creation contract changes.
+
+Require the original actor, owning active organization and membership, fresh
+authenticated human attestation, current valid membership, the independent
+`enquiries.review` entitlement and exactly one currently eligible matching review
+grant. For a completed acknowledgement that grant must be the original grant in
+the immutable review event. A replacement alone is insufficient. Expiry,
+revocation, zero/multiple eligible grants and other-capability/admin substitutes
+deny access. A valid historical record that fails current authority is not
+corruption. Historical fence revisions need not equal current revisions.
+
+Reuse shared actor then organization fences, post-lock attestation/facts, fresh
+database time and the same-grant eligibility recheck after receipt processing.
+Keep the fences through transaction completion. One narrow tenant-scoped statement
+checks the original receipt, event and resource bindings without selecting private
+enquiry contents or its current state/version/assignment. Verify command, actor,
+membership, original grant, New/v1 to Under review/v2 self-assignment, and finite
+microsecond action/completion instants. Compare the stored original MAC using
+`hmac.Equal`; the fingerprint is neither authority nor a uniqueness key.
+
+Only successful recovery-transaction completion returns `StartedReview`: original
+organization/enquiry/event IDs, Under review, version 2, original assignee membership
+and original action instant. Later qualification does not change these historical
+values. Recovery never invokes StartReview, tests the current New/unassigned state,
+generates IDs, writes records, retries or grants general enquiry-read access.
+
+- `ErrReviewUnconfirmed`: no visible eligible receipt, including another scope,
+  command or target; or a well-formed pending reservation with a matching MAC.
+  Pending review metadata already binds its enquiry but has no event, resulting
+  version, completion instant or joined original event/grant/assignee facts.
+- `ErrReviewMismatch`: an eligible, structurally valid receipt has a different MAC.
+- `ErrStored`: malformed metadata, partial completion, invalid event/resource
+  bindings, unsupported encoding or invalid timestamps. A pending reservation's
+  legitimate absence of completion fields is not corruption.
+- Current authority denial/unavailability, query failures, cancellation and
+  transaction/cleanup failures retain safe existing categories. Invalid selectors
+  or an expected version other than 1 return `ErrSelector`.
+
+Every error returns an empty acknowledgement. Absence, denial or an unsuccessful
+recovery transaction never proves the original command rolled back or permits
+re-execution. Review recovery tests cover real receipt visibility and reuse the
+existing Unix-socket proxy for successful delivery, withheld successful COMMIT
+reply and unforwarded COMMIT request. Independent connections check review and
+creation records, backend exit, connection replacement and unchanged recovery
+results. This is controlled local transport coverage, not production-network
+certification. Pending/malformed decoder fixtures do not weaken SQL constraints.
+Reassignment, production identity/authority administration, key storage/rotation,
+receipt retention, real data, HTTP/UI and deployment remain separate work.
+
+**Qualified development checkpoint — open validation incident:** The recovery
+review passed; all eight new recovery integration groups passed in normal/race
+modes, including controlled transport-failure coverage. The full race run failed
+in the existing assigned-read expiry test
+(`TestIntegrationAssignedEnquiryReadExpiry/after_reading_trip_fields`): expected
+`ErrEnquiryUnavailable`, received `ErrEnquiryReadFailed` → `ErrStorage` → `ErrCleanup`.
+Subsequent targeted executions passed, including the single instrumented
+diagnostic, but the original cause remains unknown. No recovery defect or justified
+code repair was identified; this does not establish that the original failure was
+harmless or unrelated. Keep the incident open: revisit it if it recurs during
+normally required validation or new correlated evidence appears, and explicitly
+reassess it before production release. This checkpoint does not assert a clean
+full-race suite or production readiness.
+
 Two authorized reviewers can concurrently claim the same `New` enquiry, but only one may commit version 2 and self-assignment. The loser observes the committed version/state after waiting and fails; its receipt reservation and candidate event roll back. A lock timeout must not skip the row or choose an alternative assignee. Qualification rechecks the exact stored membership, not merely the same actor or a different membership belonging to that person. Stale expected versions are never refreshed automatically. A new request repeating an already completed transition remains invalid.
 
 **Approved internal creation recovery:** A caller with fresh attestation and current `enquiries.create` authority through the original actor, organization and membership may recover only the historical acknowledgement for a matching manual creation. Use the original request key and exact creation input, the same configured key used for the version-1 MAC, and a separately attested request ID. Under the same authority fences, read and verify the eligible receipt and its immutable creation bindings in one statement, compare its stored MAC in constant time, and recheck validity before releasing receipt information. The acknowledgement contains the tenant, enquiry and event IDs, original action, resulting version and action instant. A receipt that is not visible leaves completion unconfirmed. This path performs no record writes and never retries the original command. See the [bounded recovery contract](../internal/modules/enquiries/postgres/FIRST_CREATION.md#read-only-receipt-recovery).
