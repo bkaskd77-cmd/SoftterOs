@@ -1,0 +1,321 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; connect-src 'none'; base-uri 'none'; form-action 'none'">
+  <meta name="color-scheme" content="light">
+  <title>Enquiries · SoftterOs design preview</title>
+  <style>
+    :root{--paper:#f5f4ee;--surface:#fffefa;--ink:#243b43;--muted:#647579;--line:#dce1da;--teal:#164e4b;--teal-dark:#0d3c3a;--teal-light:#e9f1ed;--gold:#a78036;--gold-light:#f5efdf;--danger:#9e4035;--danger-light:#fbefea;--radius:12px;--shadow:0 12px 34px #1e3f3910}
+    *{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:14px/1.5 "Segoe UI",Arial,sans-serif}button,input,select{font:inherit}button,select{cursor:pointer}button{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:38px;padding:8px 14px;border:1px solid var(--line);border-radius:7px;background:var(--surface);color:var(--ink);font-weight:600;transition:background .15s,border-color .15s}button:hover:not(:disabled){background:var(--teal-light);border-color:#b9cac2}button:disabled{cursor:default;opacity:.45}button.primary{background:var(--teal);color:#fff;border-color:var(--teal)}button.primary:hover:not(:disabled){background:var(--teal-dark)}button.quiet{background:transparent;border-color:transparent}button.text-action{color:var(--teal);background:transparent;border:0;padding:6px 8px;min-height:34px;font-size:13px}button.small{font-size:12px;min-height:32px;padding:5px 10px}.icon{width:18px;height:18px;flex-shrink:0;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}:focus-visible{outline:3px solid #b2873d;outline-offset:3px}button:focus-visible{position:relative;z-index:1}a{color:var(--teal)}[hidden]{display:none!important}.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}.skip{position:fixed;top:-60px;left:16px;z-index:100;background:white;padding:12px}.skip:focus{top:10px}
+    .app{display:grid;grid-template-columns:192px minmax(0,1fr);min-height:100vh}.sidebar{position:sticky;top:0;height:100vh;border-right:1px solid var(--line);padding:30px 18px 22px;display:flex;flex-direction:column;background:#efefe7}.brand{display:flex;gap:10px;align-items:center;font-size:20px;font-weight:650;letter-spacing:-.7px;padding:0 10px}.brand-mark{width:29px;height:33px;display:grid;place-items:center;background:var(--teal);color:#f3ecd9;border-radius:8px 8px 2px 8px;font:italic 23px Georgia,serif}.brand span:last-child{color:var(--teal)}.nav-label,.eyebrow{text-transform:uppercase;font-size:10px;font-weight:700;letter-spacing:1.8px;color:var(--muted)}.nav-label{margin:52px 12px 13px}.nav-item{display:flex;gap:12px;align-items:center;color:var(--teal);font-weight:650;text-decoration:none;padding:12px;border-radius:7px;background:#dfe8df;border:1px solid #d1ddd3}.nav-item:before{content:"";width:3px;height:17px;background:var(--gold);border-radius:2px}.sidebar-foot{margin-top:auto;padding:16px 10px 0;color:var(--muted);font-size:11px;border-top:1px solid #d6ded3}.sidebar-foot strong{display:block;color:var(--ink);font-size:12px;font-weight:600;margin-bottom:5px}.shell{min-width:0}.topbar{height:81px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 40px;gap:20px;background:#fafaf5}.org-control{display:flex;align-items:center;gap:11px;min-width:0}.org-icon{display:grid;place-items:center;width:34px;height:34px;border:1px solid #d4dccc;border-radius:7px;background:#f1f2e9;color:var(--teal)}.org-control label{display:block;font-size:10px;text-transform:uppercase;letter-spacing:1.2px;color:var(--muted);font-weight:600}.org-control select{border:0;background:transparent;font-weight:650;color:var(--ink);padding:1px 22px 1px 0;max-width:260px;font-size:13px}.topbar-right{display:flex;align-items:center;gap:18px}.preview-label{font-size:11px;letter-spacing:.05px;color:#686349;display:flex;align-items:center;gap:7px}.preview-dot{width:6px;height:6px;border-radius:50%;background:var(--gold)}.avatar{background:#e6e9e1;color:var(--teal);border:1px solid #d5ddd2;border-radius:50%;width:32px;height:32px;display:grid;place-items:center;font-size:11px;font-weight:700}
+    main{max-width:1580px;margin:auto;padding:38px 40px 24px}.page-heading{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;margin-bottom:30px}.page-heading h1{margin:6px 0 7px;font-size:32px;line-height:1.18;letter-spacing:-1px;font-weight:620}.page-heading p{margin:0;color:var(--muted);font-size:13px}.heading-actions{display:flex;align-items:center;gap:10px;padding-bottom:3px}.heading-actions .primary{min-height:42px;padding:10px 17px}.demo-button{font-weight:500;font-size:12px}.workspace{display:grid;grid-template-columns:minmax(0,1fr);gap:22px;align-items:start}.workspace:has(#current-result:not(:empty)){grid-template-columns:minmax(0,1fr) 270px}#current-result:empty{display:none}.queue{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;box-shadow:0 2px 3px #30423503}.queue-title{padding:16px 24px;display:flex;justify-content:space-between;align-items:flex-start;gap:15px}.queue-title h2{font-size:17px;letter-spacing:-.3px;margin:0;display:flex;align-items:center;gap:12px}.queue-title p{font-size:12px;color:var(--muted);margin:6px 0 0}.intake-help{margin-top:7px;font-size:12px}.intake-help summary{cursor:pointer;color:var(--teal);width:fit-content;padding:6px 0;font-weight:600;border-radius:3px}.intake-help summary::marker{color:var(--gold)}.help-content{max-width:680px;padding:8px 0 3px;line-height:1.7}.help-content ol{margin:0 0 9px;padding-left:19px;color:var(--muted)}.queue-options{display:flex;align-items:center;gap:18px;flex-wrap:wrap}.queue-options>label{white-space:nowrap}.pill{display:inline-flex;align-items:center;gap:5px;font-size:10px;line-height:1.5;border:1px solid #e4d9b9;border-radius:4px;padding:3px 6px;color:#79602c;background:var(--gold-light);font-weight:600;letter-spacing:.15px}.queue-toolbar{padding:12px 24px;background:#f9faf5;border-top:1px solid var(--line);border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:12px;font-size:11px;color:var(--muted)}.sort-label{display:flex;align-items:center;gap:7px}.queue-toolbar select{border:1px solid var(--line);border-radius:5px;background:var(--surface);padding:4px 22px 4px 7px;color:var(--ink);margin-left:6px;font-size:11px}.table-wrap{overflow-x:auto}table{border-collapse:collapse;width:100%;text-align:left;font-size:12px}thead{background:#fdfdf9;color:var(--muted);font-size:10px;letter-spacing:.55px;text-transform:uppercase}th{padding:13px 12px;font-weight:600;white-space:nowrap}td{padding:10px 12px;border-top:1px solid #e9ece5;vertical-align:middle}th:first-child,td:first-child{padding-left:24px}th:last-child,td:last-child{padding-right:18px;text-align:right}tbody tr:hover{background:#f7f8f1}.id{font-family:Consolas,"Courier New",monospace;font-size:11px;white-space:nowrap;color:#4f6a6a}.destination{font-weight:600;font-size:12px}.state{display:inline-flex;align-items:center;gap:5px;font-size:11px;color:#606c56;white-space:nowrap}.state:before{content:"";width:5px;height:5px;background:#839472;border-radius:50%}.version{font-size:10px;color:#77857c;display:block;margin-top:2px}.date{font-size:11px;color:#5b706f;white-space:nowrap}.date small{display:block;font-size:10px;color:#7a8883;margin-top:1px}.unknown-date{color:#8b948c;font-size:11px}.travellers{font-variant-numeric:tabular-nums}.queue-footer{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:16px 24px;border-top:1px solid var(--line);background:#fdfdf9}.page-copy{font-size:11px;color:var(--muted)}.page-copy strong{font-weight:500;color:var(--ink);display:block;margin-bottom:3px}.paging{display:flex;gap:7px;flex-shrink:0}.rail-card{border:1px solid var(--line);border-radius:var(--radius);background:#f9faf5;padding:22px}.rail-card h2{font-size:14px;letter-spacing:-.15px;margin:13px 0 8px;font-weight:650}.rail-card p{font-size:12px;color:var(--muted);margin:0;line-height:1.7}.rail-mark{width:34px;height:34px;border-radius:9px;background:var(--gold-light);border:1px solid #e8ddc2;display:grid;place-items:center;color:#927238}.page-footer{display:flex;justify-content:space-between;gap:16px;color:#7a857d;font-size:10px;padding-top:21px}.page-footer span:last-child{color:#8b8068}
+    .empty{padding:70px 26px 76px;text-align:center}.empty .rail-mark{margin:0 auto 17px;width:44px;height:44px}.empty h3{font-size:17px;font-weight:600;margin:0 0 9px}.empty p{margin:0 auto;max-width:330px;color:var(--muted);font-size:13px;line-height:1.7}.empty button{margin-top:20px}.loading-lines{width:80%;margin:0 auto 25px;display:grid;gap:15px}.loading-lines span{height:14px;border-radius:4px;background:linear-gradient(90deg,#eef0e7,#e1e8dc,#eef0e7);background-size:200% 100%;animation:shimmer 1.5s infinite}.loading-lines span:nth-child(2){width:78%}@keyframes shimmer{to{background-position:-200% 0}}.notice{border:1px solid #d7e2d6;background:#edf3e9;border-radius:9px;padding:17px 19px;margin-bottom:20px;display:flex;gap:12px}.notice.warning{background:var(--gold-light);border-color:#e3d4ad}.notice.error{background:var(--danger-light);border-color:#e9cec5}.notice h2{margin:0 0 4px;font-size:14px;font-weight:650}.notice p{margin:0;font-size:12px;color:#5f7065;line-height:1.65}.notice button{margin-top:11px}.notice .icon{margin-top:2px;color:var(--teal)}.notice.warning .icon{color:#8d6b29}.notice.error .icon{color:var(--danger)}.result-title{display:flex;align-items:center;justify-content:space-between;gap:10px}.result-title h2{margin-top:0}.summary-list{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:20px 0 0}.summary-list div{min-width:0}.summary-list .wide{grid-column:1/-1}.summary-list dt{font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);margin-bottom:4px}.summary-list dd{margin:0;font-size:13px;overflow-wrap:anywhere}.summary-list dd.id{font-size:12px}.current-tag{font-size:10px;font-weight:600;color:var(--teal);letter-spacing:.6px;text-transform:uppercase}.receipt{margin-top:17px;border-top:1px solid var(--line);padding-top:16px}.receipt h3{margin:0 0 6px;font-size:11px;font-weight:650}.receipt p{font-size:11px}.pending-key{display:block;margin-top:7px;color:#816f44;font-size:11px;font-family:Consolas,monospace;overflow-wrap:anywhere}
+    dialog{border:1px solid var(--line);border-radius:14px;box-shadow:0 24px 90px #14342c3b;background:var(--surface);color:var(--ink);padding:0;width:min(580px,calc(100vw - 32px));max-height:calc(100dvh - 40px);overflow:auto}dialog::backdrop{background:#18373055;backdrop-filter:blur(3px)}.dialog-head{padding:25px 28px 20px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:flex-start;gap:14px}.dialog-head h2{margin:0;font-size:22px;letter-spacing:-.6px;line-height:1.3}.dialog-head p{margin:6px 0 0;font-size:12px;color:var(--muted)}.icon-button{padding:6px;min-height:30px;width:30px;border:0;background:transparent}.dialog-body{padding:24px 28px}.dialog-footer{padding:17px 28px;border-top:1px solid var(--line);background:#f8f9f2;display:flex;align-items:center;justify-content:space-between;gap:15px;border-radius:0 0 14px 14px}.dialog-footer p{font-size:11px;color:var(--muted);margin:0}.dialog-footer .buttons{display:flex;gap:8px}.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:19px 18px}.field{min-width:0}.field.full{grid-column:1/-1}.field label{font-size:12px;font-weight:600;display:block;margin-bottom:6px}.field label span{font-weight:400;color:var(--muted)}input[type=text],input[type=number],.field select{display:block;width:100%;border:1px solid #cbd5cd;border-radius:6px;background:#fffefa;color:var(--ink);min-height:41px;padding:9px 11px;box-shadow:0 1px 2px #22413803}input::placeholder{color:#8d978f;font-size:12px}input[aria-invalid=true]{border-color:var(--danger);background:#fffaf6}.field-help{font-size:11px;color:var(--muted);margin:5px 0 0}.field-error{font-size:11px;color:var(--danger);margin:5px 0 0;min-height:0}.form-section{grid-column:1/-1;border-top:1px solid var(--line);padding-top:20px;margin-top:2px}.form-section h3{font-size:13px;margin:0 0 5px}.form-section p{font-size:11px;color:var(--muted);margin:0}.form-error{background:var(--danger-light);color:var(--danger);font-size:12px;padding:11px 13px;border-radius:6px;margin:0 0 18px}.form-meta{font-size:11px;color:var(--muted);border-left:2px solid #cbb478;padding-left:11px;margin:20px 0 0}.confirm-summary{background:#f2f5ec;border:1px solid #dfe6d7;border-radius:8px;padding:16px;margin-bottom:18px}.confirm-summary strong{display:block;font-size:15px;margin-top:5px}.confirm-summary p{font-size:12px;color:var(--muted);margin:4px 0 0}.confirm-copy{font-size:13px;line-height:1.8;margin:0}.confirm-copy + p{font-size:12px;color:var(--muted);margin-top:13px}.demo-badge{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#896c2e;font-weight:700;margin:0 0 8px}.scenario-select{width:100%;padding:10px;border:1px solid #ccd6cc;border-radius:6px;background:white;color:var(--ink)}.demo-caption{font-size:12px;color:var(--muted);line-height:1.65;margin:10px 0 0}.permissions{border:0;padding:0;margin:24px 0}.permissions legend{font-size:12px;font-weight:650;margin-bottom:11px}.check-row{display:flex;align-items:center;gap:10px;margin:9px 0;font-size:12px}.check-row input{accent-color:var(--teal);width:15px;height:15px}.check-row code{font-size:11px;color:#577066}.grant-box{border-top:1px solid var(--line);padding-top:18px}.grant-box label{font-size:12px;font-weight:650;display:block;margin-bottom:8px}.grant-controls{display:flex;gap:8px}.grant-controls select{min-width:0;flex:1;font-size:12px;padding:7px;border:1px solid var(--line);border-radius:6px;background:white}.grant-status{min-height:18px;margin-top:10px;font-size:11px;color:var(--teal)}.demo-help{font-size:11px;line-height:1.7;color:var(--muted);margin:20px 0 0;background:#f3f3e9;padding:12px;border-radius:6px}.busy-icon{width:14px;height:14px;display:inline-block;border:2px solid #b8cfc4;border-top-color:var(--teal);border-radius:50%;animation:spin .7s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}.primary .busy-icon{border-color:#ffffff50;border-top-color:white}.demo-state{font-size:11px;color:#80662d;background:#f8f0de;border:1px solid #eadcbb;border-radius:6px;padding:8px 12px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+    @media(min-width:1500px){.workspace:has(#current-result:not(:empty)){grid-template-columns:minmax(0,1fr) 300px}td{padding-top:12px;padding-bottom:12px}.rail-card{padding:25px}main{padding-top:44px}}
+    @media(max-width:1250px){.app{grid-template-columns:158px minmax(0,1fr)}.sidebar{padding:27px 13px 18px}.brand{font-size:18px;padding:0 5px;gap:8px}.topbar{padding:0 28px}main{padding:30px 28px 20px}.workspace:has(#current-result:not(:empty)){grid-template-columns:minmax(0,1fr)}.rail-card{padding:20px}.preview-label{font-size:10px}.queue-footer{padding:16px 24px}.page-heading h1{font-size:30px}}
+    @media(max-width:880px){.app{grid-template-columns:72px minmax(0,1fr)}.sidebar{padding:25px 12px}.brand{padding:0;justify-content:center}.brand>span:last-child,.nav-label,.nav-item>span,.sidebar-foot{display:none}.nav-item{margin-top:40px;justify-content:center;padding:12px 5px;gap:0}.nav-item:before{display:none}.topbar{padding:0 22px}.avatar{display:none}.topbar-right{gap:0}.preview-label{max-width:150px;line-height:1.5}main{padding:27px 22px 20px}.heading-actions{gap:4px}.demo-button{padding:8px}.demo-button .icon{display:none}.queue-title{padding:15px 20px}.queue-toolbar{padding:12px 20px;flex-wrap:wrap}.queue-options{flex:1;justify-content:flex-end}td:first-child,th:first-child{padding-left:20px}.queue-footer{padding:15px 20px}}
+    @media(max-width:660px){.app{display:block}.sidebar{position:static;height:auto;padding:13px 20px;display:flex;flex-direction:row;align-items:center;justify-content:space-between;border:0;border-bottom:1px solid var(--line)}.brand>span:last-child{display:inline}.brand{font-size:18px;gap:9px}.brand-mark{height:27px;width:26px;font-size:20px}.sidebar nav{display:none}.sidebar-foot{display:block;border:0;margin:0;padding:0;font-size:10px}.sidebar-foot strong{display:none}.topbar{height:73px;padding:0 20px;gap:14px}.org-icon{display:none}.org-control select{max-width:210px;font-size:12px}.preview-label{max-width:116px;font-size:9px;gap:5px}.preview-dot{display:none}main{padding:25px 16px 20px}.page-heading{align-items:flex-start;gap:15px;flex-wrap:wrap;margin-bottom:22px}.page-heading h1{font-size:30px}.page-heading p{font-size:12px}.heading-actions{width:100%;justify-content:space-between;flex-direction:row-reverse}.heading-actions .primary{flex:0 1 auto}.workspace{gap:17px}.queue-title{padding:14px 16px;gap:8px}.queue-title h2{font-size:16px;gap:9px}.queue-title p{font-size:11px}.queue-title>button{font-size:0;gap:0;padding:8px;width:34px}.queue-title>button .icon{width:16px}.queue-toolbar{padding:11px 16px;gap:8px;font-size:10px}.queue-options{width:100%;justify-content:space-between;gap:10px}.intake-help{font-size:11px}.queue-toolbar .icon{width:14px}.queue-toolbar select{margin-left:3px;padding-right:15px}table,tbody{display:block}thead{display:none}tr{display:grid;grid-template-columns:1fr auto;gap:9px 12px;padding:12px 16px;border-top:1px solid var(--line)}td{display:block;border:0;padding:0!important}td:nth-child(1){grid-column:1;grid-row:1;align-self:center}td:nth-child(2){grid-column:2;grid-row:1;display:flex;align-items:center;gap:8px;justify-content:flex-end}td:nth-child(3){grid-column:1;grid-row:2;font-size:14px}td:nth-child(4){grid-column:1;grid-row:3;font-size:11px;color:var(--muted)}td:nth-child(4):after{content:" travellers"}td:nth-child(5){grid-column:1;grid-row:4}td:nth-child(6){grid-column:2;grid-row:3/5;align-self:end}.version{display:inline;margin:0}.date small{display:inline;margin-left:5px}.text-action{font-size:12px!important}.queue-footer{padding:16px;align-items:flex-end}.page-copy{font-size:10px;max-width:158px}.paging{gap:3px}.paging button{padding:6px 8px}.rail-card{margin-bottom:15px}.page-footer{font-size:9px;flex-wrap:wrap;gap:5px;padding:12px 3px 0}.dialog-head{padding:22px 20px 17px}.dialog-head h2{font-size:21px}.dialog-body{padding:21px 20px}.dialog-footer{padding:16px 20px;flex-wrap:wrap;justify-content:flex-end}.dialog-footer p{margin-right:auto}.form-grid{grid-template-columns:1fr;gap:17px}.field.full,.form-section{grid-column:1}.grant-controls{flex-wrap:wrap}.grant-controls select{flex-basis:100%}.empty{padding:49px 20px}.empty p{font-size:12px}.notice{padding:15px}.notice p{font-size:11px}.dialog-footer .buttons{flex-wrap:wrap}}
+    @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+  </style>
+</head>
+<body>
+  <svg xmlns="http://www.w3.org/2000/svg" style="position:absolute;width:0;height:0;overflow:hidden" aria-hidden="true"><defs>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-grid" viewBox="0 0 24 24"><rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><rect x="14" y="14" width="6" height="6" rx="1"/></symbol>
+    <symbol id="i-building" viewBox="0 0 24 24"><path d="M5 21V4h14v17M3 21h18M9 21v-5h6v5M9 8h1m4 0h1M9 12h1m4 0h1"/></symbol>
+    <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14m-5-5 5 5-5 5"/></symbol>
+    <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20 10a8 8 0 1 0-1 7M20 4v6h-6"/></symbol>
+    <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 7h7m4 0h5M4 17h3m4 0h9"/><circle cx="13" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></symbol>
+    <symbol id="i-sort" viewBox="0 0 24 24"><path d="M6 4v16m-3-3 3 3 3-3M13 5h7m-7 5h5m-5 5h3"/></symbol>
+    <symbol id="i-tray" viewBox="0 0 24 24"><path d="M4 13 7 5h10l3 8v6H4zM4 13h5l1 3h4l1-3h5"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/></symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3M12 14v2"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+    <symbol id="i-warning" viewBox="0 0 24 24"><path d="m12 3 10 18H2zM12 9v5m0 3h.01"/></symbol>
+    <symbol id="i-close" viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></symbol>
+  </defs></svg>
+  <a class="skip" href="#main">Skip to enquiries</a>
+  <div class="app">
+    <aside class="sidebar" aria-label="Workspace navigation">
+      <div class="brand"><span class="brand-mark" aria-hidden="true">s</span><span>SoftterOs</span></div>
+      <nav aria-label="Main"><div class="nav-label">Workspace</div><a class="nav-item" href="#main" aria-current="page" aria-label="Enquiries"><svg class="icon" aria-hidden="true"><use href="#i-tray"/></svg><span>Enquiries</span></a></nav>
+      <div class="sidebar-foot"><strong>Built around the journey.</strong>Local design preview</div>
+    </aside>
+    <div class="shell">
+      <header class="topbar">
+        <div class="org-control"><span class="org-icon"><svg class="icon" aria-hidden="true"><use href="#i-building"/></svg></span><div><label for="organization">Active organization</label><select id="organization"><option value="meridian">Meridian Travel Studio</option><option value="northline">Northline Journeys</option></select></div></div>
+        <div class="topbar-right"><span class="preview-label"><span class="preview-dot" aria-hidden="true"></span>Design preview · synthetic data · not connected</span><span class="avatar" title="Alex Morgan · synthetic human actor" aria-label="Alex Morgan, synthetic human actor">AM</span></div>
+      </header>
+      <main id="main" tabindex="-1">
+        <div class="page-heading"><div><div class="eyebrow">Operations / Enquiries</div><h1>Enquiries</h1><p>A clear starting point for every journey.</p></div><div class="heading-actions"><button id="demo-open" class="quiet demo-button"><svg class="icon" aria-hidden="true"><use href="#i-sliders"/></svg>Demo scenarios</button><button id="create-open" class="primary"><svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg>Create enquiry</button></div></div>
+        <div id="demo-state" class="demo-state" hidden><span id="demo-state-text"></span><button id="normal-mode" class="small quiet">Return to normal</button></div>
+        <div id="outcome" aria-live="polite" tabindex="-1"></div>
+        <div class="workspace">
+          <section class="queue" aria-labelledby="intake-heading"><div class="queue-title"><div><h2 id="intake-heading">Intake <span class="pill">New · unassigned</span></h2><p>Enquiries awaiting their first review.</p><details class="intake-help" id="intake-help"><summary>How this demo intake works</summary><div class="help-content"><ol><li>Capture an enquiry.</li><li>Explicitly confirm review of an unassigned enquiry.</li><li>Continue with a separately authorized assigned summary.</li></ol><p><strong>Demo queue behavior.</strong> Concurrent claims can make a displayed page stale. Refresh restarts browsing from the first available ID, including new IDs before your current page. ID ordering is not chronological; later pages are not a frozen queue.</p><p>Viewing intake, starting review and reading an assigned summary require separate permissions. Review also needs an eligible scoped grant.</p></div></details></div><button id="refresh"><svg class="icon" aria-hidden="true"><use href="#i-refresh"/></svg>Refresh</button></div><div class="queue-toolbar"><span class="sort-label"><svg class="icon" aria-hidden="true"><use href="#i-sort"/></svg>Enquiry ID · ascending</span><div class="queue-options"><label for="page-size">Per page<select id="page-size"><option value="25">25</option><option value="50">50</option><option value="100">100</option></select></label><nav class="paging" id="top-pagination" aria-label="Intake pagination above rows"><button id="first-page-top" class="small">First page</button><button id="next-page-top" class="small">Next page <svg class="icon" aria-hidden="true"><use href="#i-arrow"/></svg></button></nav></div></div><div id="queue-content" aria-busy="false"></div><div class="queue-footer" id="queue-footer"><div class="page-copy" id="page-copy"></div><nav class="paging" aria-label="Intake pagination below rows"><button id="first-page" class="small">First page</button><button id="next-page" class="small">Next page <svg class="icon" aria-hidden="true"><use href="#i-arrow"/></svg></button></nav></div></section>
+          <aside id="current-result" aria-label="Current assigned summary"></aside>
+        </div>
+        <footer class="page-footer"><span>Only minimal trip information is shown in this workspace.</span><span>First design direction · all changes reset when this file reloads</span></footer>
+      </main>
+    </div>
+  </div>
+  <div id="announcer" class="sr-only" role="status" aria-live="polite"></div>
+
+  <dialog id="create-dialog" aria-labelledby="create-heading" aria-describedby="create-description">
+    <form id="create-form" novalidate autocomplete="off"><div class="dialog-head"><div><div class="demo-badge">Manual capture</div><h2 id="create-heading">Create enquiry</h2><p id="create-description">A few details to begin. Use synthetic information only.</p></div><button type="button" class="icon-button" id="create-close" aria-label="Close create enquiry"><svg class="icon" aria-hidden="true"><use href="#i-close"/></svg></button></div><div class="dialog-body"><div id="create-error" class="form-error" role="alert" hidden></div><div class="form-grid">
+      <div class="field full"><label for="contact-name">Contact name</label><input type="text" id="contact-name" name="name" placeholder="e.g. Jordan Ellis" aria-describedby="contact-name-error" required><p id="contact-name-error" class="field-error"></p></div>
+      <div class="field full"><label for="contact-email">Contact email</label><input type="text" inputmode="email" id="contact-email" name="email" placeholder="e.g. jordan@example.test" aria-describedby="contact-email-error" required><p id="contact-email-error" class="field-error"></p></div>
+      <div class="field"><label for="destination">Destination</label><input type="text" id="destination" name="destination" placeholder="e.g. Kyoto, Japan" aria-describedby="destination-error" required><p id="destination-error" class="field-error"></p></div>
+      <div class="field"><label for="traveller-count">Travellers</label><input type="number" id="traveller-count" name="travellers" min="1" max="99" step="1" value="2" aria-describedby="traveller-count-help traveller-count-error" required><p id="traveller-count-help" class="field-help">1–99 travellers</p><p id="traveller-count-error" class="field-error"></p></div>
+      <div class="form-section"><h3>Travel dates <span style="font-weight:400;color:var(--muted)">· optional</span></h3><p>Enter both dates or leave both blank. Historical dates are welcome.</p></div>
+      <div class="field"><label for="travel-start">Start date</label><input type="text" id="travel-start" name="start" inputmode="numeric" placeholder="YYYY-MM-DD" aria-describedby="travel-start-error"><p id="travel-start-error" class="field-error"></p></div>
+      <div class="field"><label for="travel-end">End date</label><input type="text" id="travel-end" name="end" inputmode="numeric" placeholder="YYYY-MM-DD" aria-describedby="travel-end-error"><p id="travel-end-error" class="field-error"></p></div>
+    </div><p class="form-meta">Created in <strong id="create-org"></strong> as New and unassigned. Creating an enquiry does not grant review access.</p></div><div class="dialog-footer"><p>Required unless marked optional</p><div class="buttons"><button type="button" id="create-cancel">Cancel</button><button type="submit" id="create-submit" class="primary">Create enquiry</button></div></div></form>
+  </dialog>
+
+  <dialog id="review-dialog" aria-labelledby="review-heading"><div class="dialog-head"><div><div class="demo-badge">Take the next step</div><h2 id="review-heading">Start review?</h2></div><button id="review-close" class="icon-button" aria-label="Close review confirmation"><svg class="icon" aria-hidden="true"><use href="#i-close"/></svg></button></div><div class="dialog-body"><div id="review-preview" class="confirm-summary"></div><p class="confirm-copy">This will move the enquiry to <strong>Under review</strong> and assign it to your current membership in <strong id="review-org"></strong>.</p><p>Review permission and an eligible grant for this enquiry are required. Reading its assigned summary requires separate access.</p><div id="review-error" class="form-error" role="alert" hidden></div></div><div class="dialog-footer"><p>You’ll be assigned only after confirmation.</p><div class="buttons"><button id="review-cancel">Cancel</button><button id="review-submit" class="primary">Confirm &amp; start review</button></div></div></dialog>
+
+  <dialog id="discard-dialog" aria-labelledby="discard-heading"><div class="dialog-head"><div><h2 id="discard-heading">Leave these details?</h2><p id="discard-description">Your unsaved enquiry details will be discarded.</p></div></div><div class="dialog-body"><p class="confirm-copy">Nothing has been submitted. Stay to finish the form, or discard this draft.</p></div><div class="dialog-footer"><button id="discard-stay">Keep editing</button><button id="discard-confirm" class="primary">Discard draft</button></div></dialog>
+
+  <dialog id="demo-dialog" aria-labelledby="demo-heading"><div class="dialog-head"><div><div class="demo-badge">Prototype controls only</div><h2 id="demo-heading">Demo scenarios</h2><p>Explore the interaction, including when things do not go to plan.</p></div><button id="demo-close" class="icon-button" aria-label="Close demo scenarios"><svg class="icon" aria-hidden="true"><use href="#i-close"/></svg></button></div><div class="dialog-body"><label for="scenario" style="display:block;font-size:12px;font-weight:650;margin-bottom:8px">Interaction state</label><select id="scenario" class="scenario-select"><option value="normal">Normal workflow</option><option value="loading">Loading intake</option><option value="empty">Empty intake</option><option value="unavailable">Access unavailable</option><option value="failure">Operational failure</option><option value="concurrent">Another reviewer claims the next item</option><option value="no-read">Successful review without assigned-read</option><option value="uncertain-create">Uncertain creation outcome</option><option value="uncertain-review">Uncertain review outcome</option></select><p id="scenario-help" class="demo-caption"></p><fieldset class="permissions"><legend>Independent permissions · current organization</legend><label class="check-row"><input type="checkbox" id="cap-create">Create <code>enquiries.create</code></label><label class="check-row"><input type="checkbox" id="cap-intake">Intake <code>enquiries.intake.read</code></label><label class="check-row"><input type="checkbox" id="cap-review">Review <code>enquiries.review</code></label><label class="check-row"><input type="checkbox" id="cap-read">Assigned summary <code>enquiries.read</code></label></fieldset><div class="grant-box"><label for="grant-target">Synthetic scoped review grant</label><div class="grant-controls"><select id="grant-target" aria-label="Enquiry for demo review grant"></select><button id="provision-grant" class="small">Provision grant</button><button id="remove-grant" class="small">Remove grant</button></div><p class="demo-caption">The first three fixture IDs already have a review grant. Newly created enquiries have none. A grant is scoped to this actor, organization, membership and enquiry; it does not add a capability.</p><div class="grant-status" id="grant-status" role="status"></div></div><div class="grant-box"><label for="receipt-mode">For an uncertain operation, simulate</label><select id="receipt-mode" class="scenario-select"><option value="committed">Committed; reply was lost</option><option value="pending">No visible completed receipt</option></select><p class="demo-caption">Check outcome reuses the original operation and request key. The second option stays unconfirmed; it never authorizes recreation.</p></div><p class="demo-help">These controls are in-memory fixtures, not a permission administration system or real security. Alex Morgan is a synthetic human with separate memberships in the two organizations. No authentication, storage, server or network is connected. Reload the file to reset all fixtures.</p></div><div class="dialog-footer"><p>Applies to this preview only</p><button id="demo-done" class="primary">Done</button></div></dialog>
+
+  <script>
+  'use strict';
+  (() => {
+    // Offline design simulation only. No persistence, fetch, security authority or backend integration.
+    const $ = id => document.getElementById(id);
+    const icon = name => `<svg class="icon" aria-hidden="true"><use href="#i-${name}"/></svg>`;
+    const escape = value => String(value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    const orgs = {meridian:{name:'Meridian Travel Studio',member:'member-meridian-alex',prefix:'ENQ',caps:{create:true,intake:true,review:true,read:true}},northline:{name:'Northline Journeys',member:'member-northline-alex',prefix:'NLQ',caps:{create:true,intake:true,review:true,read:true}}};
+    const actor = 'actor-alex-demo';
+    const destinations = ['Kyoto, Japan','Amalfi Coast, Italy','Bergen, Norway','Marrakesh, Morocco','Lisbon, Portugal','South Island, New Zealand','Copenhagen, Denmark','Kerala, India','Cape Town, South Africa','Reykjavík, Iceland','Ljubljana, Slovenia','Cusco, Peru','Chiang Mai, Thailand','Edinburgh, Scotland','Tbilisi, Georgia','Madeira, Portugal','Alentejo, Portugal','Stockholm, Sweden','Hoi An, Vietnam','Split, Croatia','Zürich, Switzerland','Seoul, South Korea','Istanbul, Türkiye','Galway, Ireland','Granada, Spain','Luang Prabang, Laos','Kotor, Montenegro','Victoria Falls, Zambia','Québec City, Canada','Udaipur, India','Tasmania, Australia','Osaka, Japan'];
+    const records = [], grants = new Map(), operations = [];
+    let activeOrg = 'meridian', cursor = '', pageSize = 25, page = [], hasNext = false, lastID = '', scenario = 'normal', busy = false, queueLoading = false, queueGeneration = 0, sequence = 0, selected = null, current = null, lastOutcome = null, draftSnapshot = '', discardAction = null;
+    const dialogOpeners = new Map();
+    for (const [org, config] of Object.entries(orgs)) {
+      for (let i = 1; i <= (org === 'meridian' ? 32 : 28); i++) {
+        const record = {org,id:`${config.prefix}-${String(1000+i).padStart(5,'0')}`,state:'New',version:1,assignee:null,destination:destinations[(i-1+(org==='northline'?7:0))%destinations.length],travellers:[2,4,6,2,8,3,12][(i-1)%7],start:i%4===0?'':(i===3?'2024-09-04':`2027-${String(2+i%7).padStart(2,'0')}-07`),end:i%4===0?'':(i===3?'2024-09-11':`2027-${String(2+i%7).padStart(2,'0')}-16`)};
+        records.push(record);
+        if (i <= 3) grants.set(`${org}:${record.id}`, {id:`grant-${org}-${i}`,org,actor,member:config.member,enquiry:record.id});
+      }
+    }
+    const descriptions = {
+      normal:'Browse intake, create an enquiry, then explicitly provision its demo grant before starting review.',
+      loading:'The intake loading state remains visible until you choose “Finish loading”.',
+      empty:'An authorized empty intake page. No total or assigned-enquiry listing is implied.',
+      unavailable:'A safe unavailable result with no records. Other permissions remain independent.',
+      failure:'A failed read returns no partial page. Retry is a read, never a business-command retry.',
+      concurrent:'On the next authorized confirmation, another reviewer wins the claim. Your review is not started.',
+      'no-read':'Assigned-read is turned off separately. With review authority and a grant, review succeeds but only its historical acknowledgement is shown.',
+      'uncertain-create':'Submit a valid enquiry to simulate losing the reply. Check outcome uses the same original command; it never submits again.',
+      'uncertain-review':'Confirm an authorized review to simulate losing the reply. Recovery still requires current review authority and the original grant.'
+    };
+    const text = (id, value) => { $(id).textContent = value; };
+    const announce = message => { text('announcer',message); };
+    const delay = milliseconds => new Promise(resolve => setTimeout(resolve,milliseconds));
+    const org = () => orgs[activeOrg];
+    const hasCapability = cap => org().caps[cap];
+    const find = (id, organization=activeOrg) => records.find(item => item.id === id && item.org === organization);
+    const getGrant = item => {const g=grants.get(`${activeOrg}:${item.id}`);return g && g.org===activeOrg && g.actor===actor && g.member===org().member && g.enquiry===item.id ? g : null;};
+    const canReview = item => hasCapability('review') && item.org===activeOrg && !!getGrant(item);
+    const canRead = item => hasCapability('read') && item.org===activeOrg && item.assignee===org().member && ['Under review','Qualified'].includes(item.state);
+    const summary = item => ({id:item.id,state:item.state,version:item.version,destination:item.destination,travellers:item.travellers,start:item.start,end:item.end});
+    function dateText(value) { if (!value) return ''; const [y,m,d]=value.split('-'); return `${Number(d)} ${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][Number(m)-1]} ${y}`; }
+    function dates(item) { return item.start ? `${escape(dateText(item.start))}<small>to ${escape(dateText(item.end))}</small>` : '<span class="unknown-date">Dates not set</span>'; }
+    function openDialog(id, focusId) {const d=$(id);dialogOpeners.set(id,document.activeElement);d.showModal();if(focusId)$(focusId).focus();}
+    function closeDialog(id) {const d=$(id);d.close();const old=dialogOpeners.get(id);if(old?.isConnected&&!old.disabled)old.focus();else $('create-open').focus();}
+    function busyControls(value) {busy=value;for(const id of ['organization','create-open','demo-open','normal-mode'])$(id).disabled=value;for(const op of operations){const button=$('check-outcome-'+op.key);if(button)button.disabled=value;}}
+    function renderQueue() {
+      const content=$('queue-content');content.setAttribute('aria-busy',String(queueLoading||scenario==='loading'));page=[];hasNext=false;lastID='';
+      $('queue-footer').hidden=true;$('top-pagination').hidden=true;
+      for(const suffix of ['','-top']){$('next-page'+suffix).disabled=true;$('first-page'+suffix).disabled=!cursor;}
+      let state='';
+      if(!hasCapability('intake')||scenario==='unavailable')state='unavailable';
+      else if(queueLoading||scenario==='loading')state='loading';
+      else if(scenario==='failure')state='failure';
+      else if(scenario==='empty')state='empty';
+      if(state){
+        const templates={
+          loading:`<div class="loading-lines" aria-hidden="true"><span></span><span></span><span></span></div><h3>Loading intake…</h3><p>Checking the current organization’s queue.</p>${scenario==='loading'?'<button id="finish-loading">Finish loading</button>':''}`,
+          empty:`<div class="rail-mark">${icon('tray')}</div><h3>A clear intake</h3><p>No New, unassigned enquiries are available on this page. You can capture a request when it arrives.</p>`,
+          unavailable:`<div class="rail-mark">${icon('lock')}</div><h3>Intake is unavailable</h3><p>Current access does not allow this view in the active organization. No enquiry information is shown.</p>`,
+          failure:`<div class="rail-mark">${icon('warning')}</div><h3>We couldn’t load intake</h3><p>No partial page is shown. You can try reading the queue again.</p><button id="retry-intake">Try again</button>`
+        };content.innerHTML=`<div class="empty" role="status">${templates[state]}</div>`;
+        if($('finish-loading'))$('finish-loading').onclick=()=>setScenario('normal');
+        if($('retry-intake'))$('retry-intake').onclick=()=>{setScenario('normal');refreshQueue();};return;
+      }
+      const available=records.filter(item=>item.org===activeOrg&&item.state==='New'&&item.assignee===null&&item.id>cursor).sort((a,b)=>a.id<b.id?-1:a.id>b.id?1:0);
+      hasNext=available.length>pageSize;page=available.slice(0,pageSize).map(summary);lastID=page.at(-1)?.id||'';
+      if(!page.length){content.innerHTML=`<div class="empty" role="status"><div class="rail-mark">${icon('tray')}</div><h3>${cursor?'No more items on this page':'A clear intake'}</h3><p>${cursor?'The queue may have changed. Refresh to start from the first ID again.':'No New, unassigned enquiries are available. Capture a request when it arrives.'}</p></div>`;}
+      else content.innerHTML=`<div class="table-wrap"><table><caption class="sr-only">New, unassigned enquiries in ${escape(org().name)}, sorted by ID ascending. This is not a chronological order.</caption><thead><tr><th scope="col">Enquiry ID</th><th scope="col">State / version</th><th scope="col">Destination</th><th scope="col">Travellers</th><th scope="col">Travel dates</th><th scope="col"><span class="sr-only">Action</span></th></tr></thead><tbody>${page.map(item=>`<tr><td class="id">${escape(item.id)}</td><td><span class="state">New</span><span class="version">Version ${item.version}</span></td><td class="destination">${escape(item.destination)}</td><td class="travellers">${item.travellers}</td><td class="date">${dates(item)}</td><td><button class="text-action" data-review="${escape(item.id)}" aria-label="Start review of ${escape(item.id)}">Start review ${icon('arrow')}</button></td></tr>`).join('')}</tbody></table></div>`;
+      $('queue-footer').hidden=false;$('top-pagination').hidden=false;text('page-copy','');$('page-copy').innerHTML=`<strong>${page.length?`${page.length} items on this page`:'No items on this page'}</strong>${cursor?'After '+escape(cursor):'From the first available ID'} · not chronological`;
+      for(const suffix of ['','-top']){$('next-page'+suffix).disabled=!hasNext;$('first-page'+suffix).disabled=!cursor;}
+    }
+    async function refreshQueue() {const generation=++queueGeneration;cursor='';queueLoading=true;renderQueue();await delay(420);if(generation!==queueGeneration)return;queueLoading=false;renderQueue();announce('Intake refreshed for '+org().name+'.');}
+    function renderCurrent() {
+      const el=$('current-result');el.innerHTML='';
+      if(!current||current.org!==activeOrg)return;
+      const item=find(current.id);if(!item||!canRead(item)){current=null;return;}
+      const view=summary(item);
+      el.innerHTML=`<section class="rail-card" aria-labelledby="current-heading"><div class="result-title"><span class="current-tag">Current assigned summary</span><button class="icon-button" id="close-summary" aria-label="Close current summary">${icon('close')}</button></div><h2 id="current-heading">${escape(view.destination)}</h2><p>Visible through your separate assigned-read permission.</p><dl class="summary-list"><div class="wide"><dt>Enquiry</dt><dd class="id">${escape(view.id)}</dd></div><div><dt>State</dt><dd>${escape(view.state)}</dd></div><div><dt>Version</dt><dd>${view.version}</dd></div><div><dt>Travellers</dt><dd>${view.travellers}</dd></div><div class="wide"><dt>Travel dates</dt><dd>${view.start?escape(dateText(view.start))+' – '+escape(dateText(view.end)):'Not set'}</dd></div></dl></section>`;
+      $('close-summary').onclick=()=>{current=null;renderCurrent();};
+    }
+    function showNotice(kind,title,message,operation=null) {lastOutcome={org:activeOrg,kind,title,message,operation};renderOutcome();}
+    function renderOutcome() {
+      const el=$('outcome');el.innerHTML='';
+      if(lastOutcome&&lastOutcome.org===activeOrg){
+        const {kind,title,message}=lastOutcome;
+        el.innerHTML=`<section class="notice ${kind==='warning'?'warning':kind==='error'?'error':''}">${icon(kind==='warning'?'clock':kind==='error'?'warning':'check')}<div><h2>${escape(title)}</h2><p>${escape(message)}</p></div></section>`;
+      }
+      // Unresolved actions remain available independently of the latest notification.
+      const pending=operations.filter(op=>op.org===activeOrg&&!op.acknowledged);
+      el.innerHTML+=pending.map(op=>`<section class="notice warning">${icon('clock')}<div><h2>Unresolved ${op.type==='create'?'creation':'review'} outcome</h2><p>This original operation has no confirmed acknowledgement. Checking it never submits it again.</p><span class="pending-key">Original operation: ${escape(op.key)}</span><button id="check-outcome-${escape(op.key)}" class="small" aria-label="Check ${op.type==='create'?'creation':'review'} outcome for ${escape(op.key)}" ${busy?'disabled':''}>Check ${op.type==='create'?'creation':'review'} outcome</button></div></section>`).join('');
+      for(const op of pending){const button=$('check-outcome-'+op.key);button.onclick=()=>recover(op,button);}
+    }
+    function acknowledgement(op, recovered=false) {
+      op.acknowledged=true;
+      const action=op.type==='create'?'Creation confirmed':'Review confirmed';
+      const state=op.type==='create'?'New':'Under review';const version=op.type==='create'?1:2;
+      let message=`Historical acknowledgement: ${op.id} was recorded as ${state}, version ${version}, at ${op.at}. This is not a statement of its current state.`;
+      if(op.type==='review'){
+        const item=find(op.id);if(item&&canRead(item)){current={org:activeOrg,id:item.id};message+=' A separately authorized current summary is shown.';}
+        else {current=null;message+=' The current assigned summary is unavailable with your present access.';}
+      }
+      showNotice('success',recovered?`${action} · recovered`:action,message);renderCurrent();announce(action+'. Historical acknowledgement available.');
+    }
+    function newOperation(type,id,input=null) {sequence++;return {type,id,input:input?Object.freeze({...input}):null,org:activeOrg,member:org().member,actor,key:`preview-${type}-${String(sequence).padStart(4,'0')}`,grant:type==='review'?getGrant(find(id))?.id:null,at:new Date().toISOString(),completed:false};}
+    async function recover(op,button) {
+      if(busy)return;
+      button.disabled=true;button.innerHTML='<span class="busy-icon" aria-hidden="true"></span> Checking original operation…';busyControls(true);
+      await delay(600);
+      // Recovery does not create a new operation, ID, grant, key or business record.
+      const binding=op.org===activeOrg&&op.member===org().member&&op.actor===actor;
+      const g=grants.get(`${op.org}:${op.id}`);
+      const allowed=binding&&(op.type==='create'?hasCapability('create'):hasCapability('review')&&g?.id===op.grant&&g?.actor===actor&&g?.member===op.member);
+      busyControls(false);
+      if(!allowed){showNotice('error','Outcome check unavailable','Current authority does not allow this acknowledgement. Completion remains unresolved; do not submit the operation again.',op);return;}
+      if(!op.completed){showNotice('warning','Outcome not yet confirmed','No completed receipt is visible for the original operation. This does not prove rollback. Do not submit it again or create a new request key.',op);return;}
+      acknowledgement(op,true);renderQueue();
+    }
+    function formValue() {return {name:$('contact-name').value,email:$('contact-email').value,destination:$('destination').value,travellers:$('traveller-count').value,start:$('travel-start').value,end:$('travel-end').value};}
+    function dirty() {return JSON.stringify(formValue())!==draftSnapshot;}
+    function validUnicode(value) {for(let i=0;i<value.length;i++){const c=value.charCodeAt(i);if(c>=0xD800&&c<=0xDBFF){const n=value.charCodeAt(++i);if(!(n>=0xDC00&&n<=0xDFFF))return false;}else if(c>=0xDC00&&c<=0xDFFF)return false;}return true;}
+    function validText(value,max) {return !!value&&validUnicode(value)&&value===value.trim()&&Array.from(value).length<=max&&!/[\u0000-\u001f\u007f-\u009f\u2028\u2029]/u.test(value);}
+    function validEmail(value) {
+      if(!validText(value,254)||new TextEncoder().encode(value).length>254||/[\s<>]/u.test(value))return false;
+      const at=value.lastIndexOf('@');if(at<=0||at===value.length-1||value.indexOf('@')!==at)return false;
+      // Plain addr-spec only; display names/comments/quoted rewrites are not accepted by capture.
+      const atom=/^[\p{L}\p{N}\p{M}\p{S}!#$%&'*+\-/=?^_`{|}~]+$/u;
+      return value.slice(0,at).split('.').every(s=>s&&atom.test(s))&&value.slice(at+1).split('.').every(s=>s&&atom.test(s));
+    }
+    function validDate(value) {if(!/^\d{4}-\d{2}-\d{2}$/.test(value))return false;const [y,m,d]=value.split('-').map(Number);if(y<1||m<1||m>12)return false;const leap=y%4===0&&(y%100!==0||y%400===0);return d>=1&&d<=[31,leap?29:28,31,30,31,30,31,31,30,31,30,31][m-1];}
+    function validate(input) {
+      const errors={};
+      if(!validText(input.name,120))errors['contact-name']='Enter 1–120 characters, without leading/trailing spaces or control characters.';
+      if(!validEmail(input.email))errors['contact-email']='Enter a plain email address (up to 254 UTF-8 bytes), without spaces or a display name.';
+      if(!validText(input.destination,200))errors.destination='Enter 1–200 characters, without leading/trailing spaces or control characters.';
+      if(!/^\d+$/.test(input.travellers)||Number(input.travellers)<1||Number(input.travellers)>99)errors['traveller-count']='Enter a whole number from 1 to 99.';
+      if(input.start||input.end){
+        if(!validDate(input.start))errors['travel-start']='Enter a valid start date as YYYY-MM-DD (year 0001–9999).';
+        if(!validDate(input.end))errors['travel-end']='Enter a valid end date as YYYY-MM-DD (year 0001–9999).';
+        if(validDate(input.start)&&validDate(input.end)&&input.start>input.end)errors['travel-end']='End date must be on or after the start date.';
+      }
+      return errors;
+    }
+    function showErrors(errors) {for(const id of ['contact-name','contact-email','destination','traveller-count','travel-start','travel-end']){text(id+'-error',errors[id]||'');$(id).setAttribute('aria-invalid',String(!!errors[id]));}}
+    function resetForm() {$('create-form').reset();showErrors({});$('create-error').hidden=true;draftSnapshot=JSON.stringify(formValue());}
+    function openCreate() {
+      if(busy)return;resetForm();text('create-org',org().name);openDialog('create-dialog','contact-name');
+      if(!hasCapability('create')){text('create-error','Creation is unavailable with your current permission. Intake access does not grant creation.');$('create-error').hidden=false;}
+    }
+    function askDiscard(action,description) {discardAction=action;text('discard-description',description||'Your unsaved enquiry details will be discarded.');openDialog('discard-dialog','discard-stay');}
+    function requestCloseCreate() {if(busy)return;if(dirty())askDiscard(()=>{closeDialog('create-dialog');resetForm();});else closeDialog('create-dialog');}
+    async function submitCreate(event) {
+      event.preventDefault();if(busy)return;
+      const input=formValue(), errors=validate(input);showErrors(errors);
+      if(Object.keys(errors).length){text('create-error','Please check the highlighted fields. Nothing has been submitted.');$('create-error').hidden=false;$(Object.keys(errors)[0]).focus();return;}
+      if(!hasCapability('create')){text('create-error','Creation is unavailable with your current permission. Nothing has been submitted.');$('create-error').hidden=false;return;}
+      const unresolved=operations.find(op=>op.org===activeOrg&&op.type==='create'&&!op.acknowledged);
+      if(unresolved){text('create-error','An earlier creation outcome is still unresolved. Close this form and check its original outcome; do not submit a replacement.');$('create-error').hidden=false;return;}
+      $('create-error').hidden=true;busyControls(true);for(const el of $('create-form').elements)el.disabled=true;
+      $('create-submit').innerHTML='<span class="busy-icon" aria-hidden="true"></span> Creating…';
+      const id=`${org().prefix}-${String(2000+sequence+1).padStart(5,'0')}`;const op=newOperation('create',id,input);operations.push(op);
+      await delay(650);
+      const uncertain=scenario==='uncertain-create';
+      if(!uncertain||$('receipt-mode').value==='committed'){
+        records.push({org:activeOrg,id,state:'New',version:1,assignee:null,destination:input.destination,travellers:Number(input.travellers),start:input.start,end:input.end});op.completed=true;
+      }
+      for(const el of $('create-form').elements)el.disabled=false;text('create-submit','Create enquiry');busyControls(false);closeDialog('create-dialog');resetForm();
+      if(uncertain)showNotice('warning','Outcome not yet confirmed','The reply was not confirmed. Keep this original operation; check its outcome before taking any further action. No automatic retry has run.',op);
+      else {op.acknowledged=true;acknowledgement(op);}
+      cursor='';renderQueue();$('outcome').focus({preventScroll:true});
+    }
+    function beginReview(id) {
+      if(busy)return;const view=page.find(item=>item.id===id);if(!view)return;
+      const pending=operations.find(op=>op.org===activeOrg&&op.type==='review'&&op.id===id&&!op.acknowledged);
+      if(pending){showNotice('warning','Outcome not yet confirmed','This enquiry already has an unresolved review operation. Check its original outcome; do not start it again.',pending);$('outcome').scrollIntoView({block:'nearest'});return;}
+      selected={org:activeOrg,...view};$('review-preview').innerHTML=`<span class="id">${escape(view.id)}</span><strong>${escape(view.destination)}</strong><p>${view.travellers} travellers · New, version 1</p>`;text('review-org',org().name);$('review-error').hidden=true;openDialog('review-dialog','review-cancel');
+    }
+    async function submitReview() {
+      if(busy||!selected)return;const item=find(selected.id);
+      if(!item||!canReview(item)){text('review-error','Review is unavailable. You need review permission and one eligible scoped grant; intake visibility alone is not enough. No review was started.');$('review-error').hidden=false;announce('Review unavailable. No changes made.');return;}
+      if(item.state!=='New'||item.version!==1||item.assignee!==null){closeDialog('review-dialog');selected=null;showNotice('warning','This enquiry is no longer available','The item has changed since this page was loaded. Your review was not started. Refresh intake to continue.');return;}
+      busyControls(true);for(const id of ['review-submit','review-cancel','review-close'])$(id).disabled=true;$('review-submit').innerHTML='<span class="busy-icon" aria-hidden="true"></span> Starting review…';
+      const conflict=scenario==='concurrent';const op=conflict?null:newOperation('review',item.id);
+      await delay(650);
+      if(conflict){item.state='Under review';item.version=2;item.assignee='member-other-reviewer';}
+      else {
+        operations.push(op);const uncertain=scenario==='uncertain-review';
+        if(!uncertain||$('receipt-mode').value==='committed'){item.state='Under review';item.version=2;item.assignee=org().member;op.completed=true;}
+      }
+      for(const id of ['review-submit','review-cancel','review-close'])$(id).disabled=false;text('review-submit','Confirm & start review');busyControls(false);closeDialog('review-dialog');selected=null;
+      if(conflict){showNotice('warning','Another reviewer claimed this enquiry','Your review was not started. Refresh intake to see the available items. No assigned summary is disclosed.');current=null;}
+      else if(scenario==='uncertain-review'){showNotice('warning','Outcome not yet confirmed','Review may have completed, but its reply was not confirmed. Check this original operation; do not submit another review.',op);current=null;}
+      else {op.acknowledged=true;acknowledgement(op);}
+      renderCurrent();renderQueue();$('outcome').focus({preventScroll:true});
+    }
+    function changeOrg(value) {
+      queueGeneration++;activeOrg=value;$('organization').value=value;cursor='';queueLoading=false;selected=null;current=null;lastOutcome=null;
+      scenario='normal';$('scenario').value='normal';renderMode();renderCurrent();renderQueue();renderOutcome();
+      const unresolved=operations.find(op=>op.org===activeOrg&&!op.acknowledged);
+      if(unresolved)showNotice('warning','Outcome not yet confirmed','An original operation in this organization is still unresolved. Check its outcome; do not submit a replacement.',unresolved);
+      announce('Switched to '+org().name+'. Previous selections, current summary and page cursor cleared.');
+    }
+    function renderMode() {$('demo-state').hidden=scenario==='normal';text('demo-state-text',`Demo scenario: ${$('scenario').selectedOptions[0].textContent}`);text('scenario-help',descriptions[scenario]);}
+    function setScenario(value) {scenario=value;$('scenario').value=value;cursor='';queueGeneration++;queueLoading=false;selected=null;current=null;if(!lastOutcome?.operation)lastOutcome=null;if(value==='no-read'){org().caps.read=false;$('cap-read').checked=false;}renderMode();renderQueue();renderCurrent();renderOutcome();}
+    function renderGrantTargets() {
+      const target=$('grant-target'),previous=target.value;const eligible=records.filter(item=>item.org===activeOrg&&item.state==='New'&&item.assignee===null).sort((a,b)=>a.id<b.id?-1:1);
+      target.innerHTML=eligible.map(item=>`<option value="${escape(item.id)}">${escape(item.id)} · ${escape(item.destination)}</option>`).join('');
+      if(eligible.some(item=>item.id===previous))target.value=previous;
+      const latest=operations.filter(op=>op.org===activeOrg&&op.type==='create'&&op.completed).at(-1);if(latest&&eligible.some(item=>item.id===latest.id))target.value=latest.id;
+      $('provision-grant').disabled=!eligible.length;$('remove-grant').disabled=!eligible.length;text('grant-status','');
+    }
+    function openDemo() {for(const cap of ['create','intake','review','read'])$('cap-'+cap).checked=hasCapability(cap);renderGrantTargets();renderMode();openDialog('demo-dialog','scenario');}
+    $('create-open').onclick=openCreate;$('create-close').onclick=requestCloseCreate;$('create-cancel').onclick=requestCloseCreate;$('create-form').onsubmit=submitCreate;
+    $('create-dialog').addEventListener('cancel',event=>{event.preventDefault();requestCloseCreate();});
+    $('create-form').addEventListener('input',event=>{const id=event.target.id;if($(id+'-error')){text(id+'-error','');event.target.setAttribute('aria-invalid','false');}});
+    $('discard-stay').onclick=()=>{closeDialog('discard-dialog');discardAction=null;};
+    $('discard-confirm').onclick=()=>{const action=discardAction;discardAction=null;closeDialog('discard-dialog');action?.();};
+    $('discard-dialog').addEventListener('cancel',()=>{discardAction=null;});
+    $('review-submit').onclick=submitReview;for(const id of ['review-cancel','review-close'])$(id).onclick=()=>{if(!busy){closeDialog('review-dialog');selected=null;}};
+    $('review-dialog').addEventListener('cancel',event=>{if(busy)event.preventDefault();else selected=null;});
+    $('queue-content').onclick=event=>{const button=event.target.closest('[data-review]');if(button)beginReview(button.dataset.review);};
+    $('refresh').onclick=()=>{if(!busy)refreshQueue();};
+    const firstPage=()=>{cursor='';renderQueue();announce('First available intake page.');};
+    const nextPage=()=>{if(!hasNext)return;cursor=lastID;renderQueue();announce(`Next intake page. ${page.length} items shown.`);$('intake-heading').scrollIntoView({block:'start'});};
+    for(const suffix of ['','-top']){$('first-page'+suffix).onclick=firstPage;$('next-page'+suffix).onclick=nextPage;}
+    $('page-size').onchange=()=>{pageSize=Math.min(100,Number($('page-size').value));cursor='';renderQueue();};
+    $('organization').onchange=()=>{const value=$('organization').value;$('organization').value=activeOrg;if(busy)return;if($('create-dialog').open&&dirty()){askDiscard(()=>{closeDialog('create-dialog');resetForm();changeOrg(value);},'Switching organization discards this unsaved draft and clears the previous workspace.');}else {if($('create-dialog').open)closeDialog('create-dialog');changeOrg(value);}};
+    $('demo-open').onclick=openDemo;for(const id of ['demo-close','demo-done'])$(id).onclick=()=>closeDialog('demo-dialog');
+    $('scenario').onchange=()=>setScenario($('scenario').value);$('normal-mode').onclick=()=>setScenario('normal');
+    for(const cap of ['create','intake','review','read'])$('cap-'+cap).onchange=()=>{org().caps[cap]=$('cap-'+cap).checked;current=null;renderCurrent();renderQueue();};
+    $('provision-grant').onclick=()=>{const item=find($('grant-target').value);if(!item)return;grants.set(`${activeOrg}:${item.id}`,{id:`demo-grant-${activeOrg}-${item.id}`,org:activeOrg,actor,member:org().member,enquiry:item.id});text('grant-status',`Demo grant provisioned for ${item.id}. Independent capabilities are unchanged.`);};
+    $('remove-grant').onclick=()=>{const id=$('grant-target').value;grants.delete(`${activeOrg}:${id}`);text('grant-status',`Demo grant removed for ${id}. Intake visibility is unchanged.`);};
+    // Native dialogs contain focus. Closing restores the trigger; busy commands cannot be dismissed and resubmitted.
+    window.addEventListener('beforeunload',event=>{if(($('create-dialog').open&&dirty())||operations.some(op=>!op.acknowledged)){event.preventDefault();event.returnValue='';}});
+    renderMode();renderQueue();renderCurrent();
+  })();
+  </script>
+</body>
+</html>
